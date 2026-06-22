@@ -1,0 +1,9 @@
+node_modules/
+dist/
+__pycache__/
+venv/
+*.pyc
+.DS_Store
+
+# soccerdata / undetected-chromedriver scratch written into the cwd
+downloaded_files/
