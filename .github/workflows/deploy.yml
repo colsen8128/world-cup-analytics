@@ -1,16 +1,14 @@
 name: Deploy to GitHub Pages
 
 # Builds the Vite dashboard and publishes dist/ to GitHub Pages.
-# Triggers on:
-#   - push to main            (your code changes)
-#   - the daily data refresh   (so a new data.json republishes the site)
-#   - manual run from the Actions tab
+# Triggers on every push to main (including a data refresh pushed by
+# ./refresh.sh) and on a manual run from the Actions tab.
+#
+# Note: data is refreshed locally via ./refresh.sh, not in CI — FBref blocks
+# GitHub's datacenter IPs, so fetch_fbref.py must run from a residential IP.
 on:
   push:
     branches: [main]
-  workflow_run:
-    workflows: ["Update World Cup stats"]
-    types: [completed]
   workflow_dispatch: {}
 
 permissions:

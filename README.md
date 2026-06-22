@@ -73,17 +73,26 @@ soccerdata caches every page under `~/soccerdata` and rate-limits requests —
 leave that on. Re-runs are fast and stay polite to FBref. Review FBref's data
 usage terms before any commercial use.
 
-## 3. Automate the daily refresh
+## 3. Refresh the data and publish
 
-`.github/workflows/update.yml` runs `fetch_fbref.py` on a cron and commits the
-updated `public/data.json`. Adjust the cron time to a few hours after the last
-match of the day in your time zone.
+FBref/Cloudflare blocks datacenter IPs, so `fetch_fbref.py` **can't run on
+GitHub Actions** — it must run from a machine with a normal (residential) IP,
+like your Mac. One command does the whole loop (fetch → commit → push):
 
-- **Vercel / Netlify**: connect the repo; the commit from the workflow triggers
-  a redeploy automatically. Nothing else needed.
-- **GitHub Pages**: add a deploy step that runs `npm ci && npm run build` and
-  publishes `dist/` (e.g. with `actions/deploy-pages`), triggered on push to
-  `main`.
+```bash
+npm run refresh        # or: ./refresh.sh
+```
+
+The push to `main` triggers `.github/workflows/deploy.yml`, which builds the
+site with `npm ci && npm run build` and publishes `dist/` to GitHub Pages via
+`actions/deploy-pages`. The live site updates in ~1–2 minutes. Run `npm run
+refresh` whenever you want fresh numbers (e.g. after each match day).
+
+> Want true hands-off daily automation? Switch the data source in
+> `fetch_fbref.py` to an API that allows datacenter access (API-Football,
+> BALLDONTLIE GOAT, etc. — see the table below) and move the fetch back into a
+> scheduled workflow. The dashboard never changes, since it only reads
+> `data.json`.
 
 ---
 
