@@ -195,6 +195,22 @@ const CSS = `
 .wc .pill{font-size:11px;color:var(--muted2);border:1px solid var(--line2);border-radius:20px;
   padding:1px 7px;}
 
+.wc .filters{display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px;margin:0 0 16px;}
+.wc .filters .fld{display:flex;flex-direction:column;gap:6px;}
+.wc .filters label{font-family:'Barlow Condensed';font-weight:600;font-size:12px;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--muted);}
+.wc .filters select,.wc .filters input{background:var(--surface2);color:var(--text);
+  border:1px solid var(--line2);border-radius:8px;padding:9px 11px;font-family:'Inter',sans-serif;
+  font-size:13px;min-width:190px;}
+.wc .filters select:focus,.wc .filters input:focus{outline:none;border-color:var(--blue);}
+.wc .filters .clear{appearance:none;background:none;border:1px solid var(--line2);color:var(--muted);
+  border-radius:8px;padding:9px 13px;cursor:pointer;font-size:12px;}
+.wc .filters .clear:hover{color:var(--text);border-color:var(--blue);}
+.wc .filters .count{margin-left:auto;color:var(--muted2);font-size:12px;
+  font-variant-numeric:tabular-nums;align-self:center;}
+.wc .empty{padding:28px 16px;text-align:center;color:var(--muted2);font-size:14px;
+  background:var(--surface);border:1px solid var(--line);border-radius:14px;}
+
 .wc .foot{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);
   color:var(--muted2);font-size:12px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
 
@@ -388,15 +404,70 @@ function Players({ data }) {
     { key: "sogpg", label: "SoG/g", title: "Shots on goal per game", render: (p) => <span className="tnum">{f2(p.sogpg)}</span> },
     { key: "P", label: "P", title: "Matches played", render: (p) => <span className="pill tnum">{p.P}</span> },
   ];
+  const [team, setTeam] = useState("ALL");
+  const [query, setQuery] = useState("");
+
+  // Teams that actually have players, as [code, fullName], sorted by name.
+  const teamOptions = useMemo(() => {
+    const seen = new Map();
+    for (const p of data.players) if (!seen.has(p.team)) seen.set(p.team, p.teamName);
+    return [...seen.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+  }, [data.players]);
+
+  const rows = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return data.players.filter(
+      (p) =>
+        (team === "ALL" || p.team === team) &&
+        (!q || p.name.toLowerCase().includes(q))
+    );
+  }, [data.players, team, query]);
+
+  const filtered = team !== "ALL" || query.trim() !== "";
+
   return (
     <div className="wrap">
       <div className="hero">
         <div className="eyebrow">Individual leaders</div>
         <h1>Player Statistics</h1>
-        <p>Per-game scoring and shooting output for every player on the pitch. Tap any column to sort.</p>
+        <p>Per-game scoring and shooting output for every player on the pitch. Filter by team or
+          search by name, then tap any column to sort.</p>
       </div>
       <div style={{ marginTop: 28 }}>
-        <SortTable columns={cols} rows={data.players} initialSort={{ key: "gpg", dir: "desc" }} />
+        <div className="filters">
+          <div className="fld">
+            <label htmlFor="team-filter">Team</label>
+            <select id="team-filter" value={team} onChange={(e) => setTeam(e.target.value)}>
+              <option value="ALL">All teams</option>
+              {teamOptions.map(([code, name]) => (
+                <option key={code} value={code}>{name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="fld">
+            <label htmlFor="player-search">Search player</label>
+            <input
+              id="player-search"
+              type="search"
+              placeholder="e.g. Messi"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
+          {filtered && (
+            <button className="clear" onClick={() => { setTeam("ALL"); setQuery(""); }}>
+              Clear
+            </button>
+          )}
+          <span className="count">
+            {rows.length} player{rows.length === 1 ? "" : "s"}
+          </span>
+        </div>
+        {rows.length ? (
+          <SortTable columns={cols} rows={rows} initialSort={{ key: "gpg", dir: "desc" }} />
+        ) : (
+          <div className="empty">No players match this filter.</div>
+        )}
       </div>
     </div>
   );
