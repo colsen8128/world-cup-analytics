@@ -24,13 +24,11 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # On a data-refresh trigger, only deploy if that run actually succeeded.
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
       - run: npm ci
       - run: npm run build
