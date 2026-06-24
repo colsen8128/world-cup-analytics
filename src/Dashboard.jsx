@@ -218,6 +218,48 @@ const CSS = `
 .wc .foot{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);
   color:var(--muted2);font-size:12px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
 
+/* Mobile-only "Sort by" control (hidden on desktop; tables sort via headers). */
+.wc .msort{display:none;}
+
+/* ---- Phones / small tablets: turn the wide stat tables into stacked cards ---- */
+@media (max-width:720px){
+  .wc .msort{display:flex;align-items:center;gap:10px;margin:0 0 14px;}
+  .wc .msort .msort-l{font-family:'Barlow Condensed';font-weight:600;font-size:12px;
+    text-transform:uppercase;letter-spacing:.06em;color:var(--muted);white-space:nowrap;}
+  .wc .msort select{flex:1;min-width:0;background:var(--surface2);color:var(--text);
+    border:1px solid var(--line2);border-radius:8px;padding:10px 11px;
+    font-family:'Inter',sans-serif;font-size:14px;}
+  .wc .msort select:focus,.wc .msort .msort-dir:focus-visible{outline:none;border-color:var(--blue);}
+  .wc .msort .msort-dir{background:var(--surface2);color:var(--text);border:1px solid var(--line2);
+    border-radius:8px;padding:10px 14px;cursor:pointer;font-size:13px;line-height:1;}
+
+  /* Each table row becomes a self-contained card. */
+  .wc .panel{background:transparent;border:none;border-radius:0;overflow:visible;}
+  .wc .tblscroll{overflow-x:visible;}
+  .wc table{min-width:0;}
+  .wc thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);} /* a11y-hide header */
+  .wc table,.wc tbody,.wc tr,.wc td{display:block;width:100%;}
+  .wc tbody tr{background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    padding:12px 15px;margin-bottom:12px;}
+  .wc tbody tr:last-child{margin-bottom:0;}
+  .wc tbody tr:hover td,.wc tbody tr:hover td:first-child{background:none;}
+  .wc tbody td{display:flex;justify-content:space-between;align-items:center;gap:16px;
+    padding:7px 0;border:none;text-align:right;white-space:normal;}
+  .wc tbody td::before{content:attr(data-label);font-family:'Barlow Condensed',sans-serif;
+    font-weight:600;text-transform:uppercase;letter-spacing:.04em;font-size:12px;
+    color:var(--muted);text-align:left;flex:0 0 auto;}
+  /* First cell = card title: full width, no label, divider beneath. */
+  .wc tbody td:first-child{position:static;display:block;padding:0 0 11px;margin-bottom:7px;
+    border-bottom:1px solid var(--line);font-size:16px;font-weight:600;}
+  .wc tbody td:first-child::before{content:none;}
+
+  /* Filters & leaderboards stack full-width for easier tapping. */
+  .wc .filters{flex-direction:column;align-items:stretch;}
+  .wc .filters .fld,.wc .filters select,.wc .filters input{width:100%;min-width:0;}
+  .wc .filters .count{margin-left:0;}
+  .wc .grid{grid-template-columns:1fr;}
+}
+
 @media (max-width:640px){
   .wc .nav{flex-wrap:wrap;gap:14px 18px;padding:12px 18px;}
   .wc .stamp{flex-basis:100%;text-align:left;}
@@ -285,40 +327,59 @@ function SortTable({ columns, rows, initialSort }) {
 
   const onSort = (key, defDir) =>
     setSort((s) => (s.key === key ? { key, dir: s.dir === "asc" ? "desc" : "asc" } : { key, dir: defDir }));
+  const pickSort = (key) =>
+    setSort({ key, dir: columns.find((c) => c.key === key)?.defDir || "desc" });
+  const flipDir = () => setSort((s) => ({ key: s.key, dir: s.dir === "asc" ? "desc" : "asc" }));
 
   return (
-    <div className="panel">
-      <div className="tblscroll">
-        <table>
-          <thead>
-            <tr>
-              {columns.map((c) => (
-                <th
-                  key={c.key}
-                  className={sort.key === c.key ? "on" : ""}
-                  onClick={() => onSort(c.key, c.defDir || "desc")}
-                  onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onSort(c.key, c.defDir || "desc"))}
-                  tabIndex={0}
-                  title={c.title || c.label}
-                >
-                  {c.label}
-                  {sort.key === c.key && <span className="ar">{sort.dir === "asc" ? "▲" : "▼"}</span>}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {sorted.map((r, i) => (
-              <tr key={r.code || (r.name + (r.team || "")) || i}>
+    <>
+      {/* Mobile-only sort control: column headers are hidden in card view. */}
+      <div className="msort">
+        <span className="msort-l">Sort by</span>
+        <select value={sort.key} onChange={(e) => pickSort(e.target.value)} aria-label="Sort by">
+          {columns.map((c) => (
+            <option key={c.key} value={c.key}>{c.title || c.label}</option>
+          ))}
+        </select>
+        <button className="msort-dir" onClick={flipDir}
+          aria-label={sort.dir === "asc" ? "Ascending" : "Descending"}>
+          {sort.dir === "asc" ? "▲" : "▼"}
+        </button>
+      </div>
+
+      <div className="panel">
+        <div className="tblscroll">
+          <table>
+            <thead>
+              <tr>
                 {columns.map((c) => (
-                  <td key={c.key}>{c.render ? c.render(r) : r[c.key]}</td>
+                  <th
+                    key={c.key}
+                    className={sort.key === c.key ? "on" : ""}
+                    onClick={() => onSort(c.key, c.defDir || "desc")}
+                    onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onSort(c.key, c.defDir || "desc"))}
+                    tabIndex={0}
+                    title={c.title || c.label}
+                  >
+                    {c.label}
+                    {sort.key === c.key && <span className="ar">{sort.dir === "asc" ? "▲" : "▼"}</span>}
+                  </th>
                 ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {sorted.map((r, i) => (
+                <tr key={r.code || (r.name + (r.team || "")) || i}>
+                  {columns.map((c) => (
+                    <td key={c.key} data-label={c.label}>{c.render ? c.render(r) : r[c.key]}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
