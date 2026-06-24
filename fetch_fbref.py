@@ -62,46 +62,79 @@ def code_for(name: str) -> str:
     return (letters[:3] or "UNK")
 
 
-def col(df: pd.DataFrame, leaf: str, group: str | None = None):
-    """Return a column Series from a (possibly MultiIndex) DataFrame by leaf name.
+# FBref competition pages (comp id 1 = World Cup). We parse these AGGREGATE
+# pages directly by their stable data-stat attributes, rather than using
+# soccerdata's read_*_season_stats — those build team/player totals from each
+# squad's individual page (/en/squads/.../Portugal-Men-Stats), which on FBref
+# can lag the competition tables badly (e.g. a played match missing entirely).
+SHOOTING_URL = "https://fbref.com/en/comps/1/shooting/World-Cup-Stats"
+STATS_URL = "https://fbref.com/en/comps/1/stats/World-Cup-Stats"
+PASSING_URL = "https://fbref.com/en/comps/1/passing_types/World-Cup-Stats"
 
-    Prefers an exact, case-insensitive match on the leaf (last) level, optionally
-    constrained to a column group. Falls back to a 'contains' match. Returns a
-    zero Series if nothing matches so the pipeline never crashes on a rename.
+
+def _fetch(fb: "sd.FBref", url: str) -> str:
+    """Fetch a page via soccerdata's Cloudflare-aware, cached downloader."""
+    page = fb.get(url).read()
+    return page.decode("utf-8", "replace") if isinstance(page, bytes) else page
+
+
+def _rows(page: str):
+    return re.findall(r"<tr[^>]*>.*?</tr>", page, re.S)
+
+
+def _cells(row: str) -> dict:
+    """Map every data-stat in a row to its tag-stripped, unescaped text."""
+    return {
+        stat: htmllib.unescape(re.sub(r"<[^>]+>", "", val)).strip()
+        for stat, val in re.findall(r'data-stat="([^"]+)"[^>]*>(.*?)</t[dh]>', row, re.S)
+    }
+
+
+def _squad_name(row: str):
+    """Clean squad name from a row's /en/squads/ link (no flag-code prefix)."""
+    m = re.search(r'href="/en/squads/[^"]*"[^>]*>([^<]+)</a>', row)
+    return htmllib.unescape(m.group(1)).strip() if m else None
+
+
+def _to_int(s) -> int:
+    try:
+        return int(float(s))
+    except (TypeError, ValueError):
+        return 0
+
+
+def team_shooting(fb: "sd.FBref") -> dict:
+    """{team_name: (shots, shots_on_target)} from the competition shooting page.
+
+    Reads squad summary rows from the "for" (Squad) table only: they link to
+    /en/squads/, carry no per-player cell, and aren't the "vs Opponent" table.
     """
-    def leaf_of(c):
-        return c[-1] if isinstance(c, tuple) else c
-
-    def group_of(c):
-        return c[0] if isinstance(c, tuple) else ""
-
-    # exact leaf match
-    for c in df.columns:
-        if str(leaf_of(c)).lower() == leaf.lower():
-            if group is None or group.lower() in str(group_of(c)).lower():
-                return pd.to_numeric(df[c], errors="coerce").fillna(0)
-    # fallback: contains
-    for c in df.columns:
-        if leaf.lower() in str(leaf_of(c)).lower():
-            if group is None or group.lower() in str(group_of(c)).lower():
-                return pd.to_numeric(df[c], errors="coerce").fillna(0)
-    print(f"  ! column '{leaf}'"
-          f"{' in '+group if group else ''} not found; using 0", file=sys.stderr)
-    return pd.Series(0, index=df.index)
+    out = {}
+    for row in _rows(_fetch(fb, SHOOTING_URL)):
+        if "/en/squads/" not in row or 'data-stat="player"' in row:
+            continue
+        c = _cells(row)
+        name = _squad_name(row)
+        if not name or name.lower().startswith("vs "):
+            continue  # missing, or the opponent ("vs") table
+        if "shots" in c:
+            out.setdefault(name, (_to_int(c.get("shots")),
+                                  _to_int(c.get("shots_on_target"))))
+    return out
 
 
-def text_col(df: pd.DataFrame, name: str) -> pd.Series:
-    """Return a flat (non-numeric) column by name, matching ANY MultiIndex level.
-
-    Flat single-level columns can land in either tuple position depending on the
-    pandas version (e.g. ('pos','') on pandas 3.x vs ('','pos') earlier), so we
-    check every level rather than assuming the leaf. Returns "" if absent.
-    """
-    for c in df.columns:
-        parts = c if isinstance(c, tuple) else (c,)
-        if any(str(p).lower() == name.lower() for p in parts):
-            return df[c].fillna("").astype(str)
-    return pd.Series("", index=df.index)
+def player_rows(fb: "sd.FBref", url: str):
+    """List of (player_name, team_name, cells) for each player row on a comp page."""
+    out = []
+    for row in _rows(_fetch(fb, url)):
+        if 'data-stat="player"' not in row:
+            continue
+        c = _cells(row)
+        name = c.get("player", "")
+        if not name or name == "Player":
+            continue  # repeated mid-table header rows
+        out.append((name, _squad_name(row) or c.get("team", ""), c))
+    return out
 
 
 def team_records(schedule: pd.DataFrame) -> dict:
@@ -146,108 +179,68 @@ def team_records(schedule: pd.DataFrame) -> dict:
 
 
 def fetch_corners(fb: "sd.FBref") -> dict:
-    """Pull corner kicks (CK) per team from FBref's passing-types page.
+    """{team_name: corners_taken} from the competition passing-types page.
 
-    soccerdata doesn't expose this table, so we fetch the page through its own
-    Cloudflare-aware, cached downloader (fb.get) — plain urllib gets a 403 — and
-    parse the stable `data-stat="corner_kicks"` attribute rather than read_html,
-    whose multi-row headers misalign the columns.
-
-    We read squad-level rows from the "for" (Squad) table only: those rows link
-    to /en/squads/, carry no per-player cell, and aren't the "vs Opponent" table.
-    Returns {team_full_name: corners_taken}. Best-effort; returns {} on failure
-    or while FBref still publishes the column empty (early in the tournament).
+    soccerdata doesn't expose this table. Reads the stable data-stat="corner_kicks"
+    from squad "for" rows. Best-effort: returns {} (corners fall back to 0) on
+    failure or while FBref still publishes the column empty (early in a tournament).
     """
-    url = "https://fbref.com/en/comps/1/passing_types/World-Cup-Stats"
-
-    def cell(row: str, stat: str) -> str | None:
-        m = re.search(r'data-stat="%s"[^>]*>(.*?)</t[dh]>' % stat, row, re.S)
-        if not m:
-            return None
-        return htmllib.unescape(re.sub(r"<[^>]+>", "", m.group(1))).strip()
-
     try:
-        page = fb.get(url).read()
-        if isinstance(page, bytes):
-            page = page.decode("utf-8", "replace")
         out = {}
-        for row in re.findall(r"<tr[^>]*>.*?</tr>", page, re.S):
-            # squad summary rows link to a squad page and have no player cell
+        for row in _rows(_fetch(fb, PASSING_URL)):
             if "/en/squads/" not in row or 'data-stat="player"' in row:
                 continue
-            m = re.search(r'data-stat="team"[^>]*>.*?<a [^>]*>(.*?)</a>', row, re.S)
-            if not m:
-                continue
-            name = htmllib.unescape(re.sub(r"<[^>]+>", "", m.group(1))).strip()
+            name = _squad_name(row)
             if not name or name.lower().startswith("vs "):
-                continue  # skip the opponent ("vs") table
-            ck = cell(row, "corner_kicks")
-            if ck and ck.isdigit():
-                out.setdefault(name, int(ck))  # first table = "for"
+                continue  # missing, or the opponent ("vs") table
+            ck = _cells(row).get("corner_kicks", "")
+            if ck.isdigit():
+                out.setdefault(name, int(ck))
         if not out:
             print("  ! corners column is empty on FBref right now; corners set to 0",
                   file=sys.stderr)
         return out
     except Exception as e:
         print(f"  ! corners fetch failed ({e}); corners set to 0", file=sys.stderr)
-    return {}
+        return {}
 
 
 def main():
     fb = sd.FBref(leagues=LEAGUE, seasons=SEASON)
 
     print("Reading schedule ...")
-    schedule = fb.read_schedule()
-    rec = team_records(schedule)
+    rec = team_records(fb.read_schedule())
 
-    print("Reading team shooting ...")
-    tshoot = fb.read_team_season_stats(stat_type="shooting")
-    t_sh = col(tshoot, "Sh", group="Standard")
-    t_sot = col(tshoot, "SoT", group="Standard")
+    print("Reading team shooting (competition page) ...")
+    tshoot = team_shooting(fb)
 
-    print("Reading corners (direct FBref) ...")
+    print("Reading corners (competition page) ...")
     corners = fetch_corners(fb)
 
-    # team full name lives in the last index level
-    def name_of(idx):
-        return idx[-1] if isinstance(idx, tuple) else idx
-
     teams = []
-    for idx in tshoot.index:
-        name = name_of(idx)
+    for name in sorted(set(rec) | set(tshoot)):
         r = rec.get(name, dict(P=0, W=0, D=0, L=0, GF=0, GA=0))
+        sh, sot = tshoot.get(name, (0, 0))
         teams.append([
             code_for(name), name, r["P"], r["W"], r["D"], r["L"],
-            r["GF"], r["GA"], int(t_sh.loc[idx]), int(t_sot.loc[idx]),
-            int(corners.get(name, 0)),
+            r["GF"], r["GA"], sh, sot, _to_int(corners.get(name, 0)),
         ])
-    teams.sort(key=lambda x: (-(x[3] and (x[6] / x[2]) or 0)))  # rough: goals/game
+    teams.sort(key=lambda x: -(x[6] / x[2]) if x[2] else 0)  # goals/game
 
-    print("Reading player standard + shooting ...")
-    pstd = fb.read_player_season_stats(stat_type="standard")
-    pshoot = fb.read_player_season_stats(stat_type="shooting")
-    p_mp = col(pstd, "MP", group="Playing")
-    p_g = col(pstd, "Gls", group="Performance")
-    p_a = col(pstd, "Ast", group="Performance")
-    p_pos = text_col(pstd, "pos")
-    p_sh = col(pshoot, "Sh", group="Standard")
-    p_sot = col(pshoot, "SoT", group="Standard")
-
+    print("Reading player stats (competition pages) ...")
+    shooting = {(p, t): c for p, t, c in player_rows(fb, SHOOTING_URL)}
     players = []
-    for idx in pstd.index:
-        # index is (league, season, team, player)
-        team = idx[-2] if isinstance(idx, tuple) and len(idx) >= 2 else ""
-        player = idx[-1] if isinstance(idx, tuple) else idx
-        mp = int(p_mp.loc[idx]) if idx in p_mp.index else 0
+    for name, team, c in player_rows(fb, STATS_URL):
+        mp = _to_int(c.get("games"))
         if mp == 0:
             continue
-        sh = int(p_sh.loc[idx]) if idx in p_sh.index else 0
-        sot = int(p_sot.loc[idx]) if idx in p_sot.index else 0
+        sc = shooting.get((name, team), {})
         players.append([
-            player, code_for(team), str(p_pos.loc[idx])[:2] or "",
-            mp, int(p_g.loc[idx]), int(p_a.loc[idx]), sh, sot,
+            name, code_for(team), (c.get("position", "") or "")[:2],
+            mp, _to_int(c.get("goals")), _to_int(c.get("assists")),
+            _to_int(sc.get("shots")), _to_int(sc.get("shots_on_target")),
         ])
-    # keep the most relevant: sort by goals+assists desc, cap for a lean file
+    # keep the most relevant first: goals+assists, with a nudge for shot volume
     players.sort(key=lambda x: -(x[4] + x[5] + 0.1 * x[6]))
 
     matchday = max((t[2] for t in teams), default=0)
