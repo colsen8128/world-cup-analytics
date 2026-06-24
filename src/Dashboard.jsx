@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 
 /* ------------------------------------------------------------------ *
  *  DATA LAYER
@@ -75,25 +75,29 @@ const SAMPLE = {
 function deriveData(RAW) {
   const teams = RAW.teams.map(([code, name, P, W, D, L, GF, GA, shots, sot, cor]) => {
     const pts = W * 3 + D;
+    const per = (n) => (P > 0 ? n / P : 0); // avoid NaN/Infinity for 0-game teams
     return {
       code, name, P, W, D, L, GF, GA, shots, sot, cor, pts,
-      gpg: GF / P,            // goals per game
-      apg: GA / P,            // allowed goals per game
-      gdpg: (GF - GA) / P,    // goal difference per game
-      spg: shots / P,         // total shots per game
-      sotpg: sot / P,         // shots on target per game
-      cpg: cor / P,           // corners per game
+      gpg: per(GF),           // goals per game
+      apg: per(GA),           // allowed goals per game
+      gdpg: per(GF - GA),     // goal difference per game
+      spg: per(shots),        // total shots per game
+      sotpg: per(sot),        // shots on target per game
+      cpg: per(cor),          // corners per game
     };
   });
   const teamByCode = Object.fromEntries(teams.map((t) => [t.code, t]));
-  const players = RAW.players.map(([name, team, pos, P, G, A, sh, sog]) => ({
-    name, team, pos, P, G, A, sh, sog,
-    gpg: G / P,    // goals per game
-    apg: A / P,    // assists per game
-    shpg: sh / P,  // shots per game
-    sogpg: sog / P,// shots on goal per game
-    teamName: teamByCode[team]?.name ?? team,
-  }));
+  const players = RAW.players.map(([name, team, pos, P, G, A, sh, sog]) => {
+    const per = (n) => (P > 0 ? n / P : 0);
+    return {
+      name, team, pos, P, G, A, sh, sog,
+      gpg: per(G),     // goals per game
+      apg: per(A),     // assists per game
+      shpg: per(sh),   // shots per game
+      sogpg: per(sog), // shots on goal per game
+      teamName: teamByCode[team]?.name ?? team,
+    };
+  });
   return { updated: RAW.updated, matchday: RAW.matchday, teams, players };
 }
 
@@ -238,9 +242,13 @@ function Leaderboard({ title, unit, items, fmt, lowerIsBetter }) {
         <span className="u">{unit}</span>
       </div>
       {sorted.map((it, i) => {
+        // Higher-is-better: bar scales with value. Lower-is-better (e.g. fewest
+        // goals allowed): best=longest, scaled within the visible range. Both
+        // handle 0 cleanly (a clean sheet no longer divides by zero).
+        const v = Math.abs(it.value);
         const w = lowerIsBetter
-          ? (min / Math.abs(it.value)) * 100
-          : (Math.abs(it.value) / max) * 100;
+          ? (max === min ? 100 : (1 - (v - min) / (max - min)) * 100)
+          : (v / max) * 100;
         return (
           <div className={"row" + (i === 0 ? " first" : "")} key={it.label + i}>
             <span className="rk">{i + 1}</span>
@@ -301,7 +309,7 @@ function SortTable({ columns, rows, initialSort }) {
           </thead>
           <tbody>
             {sorted.map((r, i) => (
-              <tr key={i}>
+              <tr key={r.code || (r.name + (r.team || "")) || i}>
                 {columns.map((c) => (
                   <td key={c.key}>{c.render ? c.render(r) : r[c.key]}</td>
                 ))}
@@ -322,7 +330,7 @@ const fSigned = (n) => (n > 0 ? "+" : "") + n.toFixed(2);
  * ------------------------------------------------------------------ */
 function Home({ data, go }) {
   const { teams, players } = data;
-  const tItems = (key, sub) => teams.map((t) => ({ label: t.name, value: t[key] }));
+  const tItems = (key) => teams.map((t) => ({ label: t.name, value: t[key] }));
   const pItems = (key) => players.map((p) => ({ label: p.name, sub: p.team, value: p[key] }));
 
   return (

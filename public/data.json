@@ -1,5 +1,5 @@
 {
-  "updated": "2026-06-24T19:59:05.241617+00:00",
+  "updated": "2026-06-24T20:34:18.349982+00:00",
   "matchday": 2,
   "teams": [
     [
@@ -250,7 +250,7 @@
       0
     ],
     [
-      "NEW",
+      "NZL",
       "New Zealand",
       2,
       0,
@@ -315,7 +315,7 @@
       0
     ],
     [
-      "BOS",
+      "BIH",
       "Bosnia & Herz.",
       2,
       0,
@@ -328,7 +328,7 @@
       0
     ],
     [
-      "CAB",
+      "CPV",
       "Cabo Verde",
       2,
       0,
@@ -354,7 +354,7 @@
       0
     ],
     [
-      "CTE",
+      "CIV",
       "Côte d'Ivoire",
       2,
       1,
@@ -367,7 +367,7 @@
       0
     ],
     [
-      "IRI",
+      "IRN",
       "IR Iran",
       2,
       0,
@@ -445,7 +445,7 @@
       0
     ],
     [
-      "CON",
+      "COD",
       "Congo DR",
       2,
       0,
@@ -458,7 +458,7 @@
       0
     ],
     [
-      "CUR",
+      "CUW",
       "Curaçao",
       2,
       0,
@@ -484,7 +484,7 @@
       0
     ],
     [
-      "IRA",
+      "IRQ",
       "Iraq",
       2,
       0,
@@ -536,7 +536,7 @@
       0
     ],
     [
-      "SOU",
+      "RSA",
       "South Africa",
       2,
       0,
@@ -614,7 +614,7 @@
       0
     ],
     [
-      "TRK",
+      "TUR",
       "Türkiye",
       2,
       0,
@@ -920,7 +920,7 @@
     ],
     [
       "Chris Wood",
-      "NEW",
+      "NZL",
       "FW",
       2,
       0,
@@ -950,7 +950,7 @@
     ],
     [
       "Elijah Just",
-      "NEW",
+      "NZL",
       "MF",
       2,
       2,
@@ -1080,7 +1080,7 @@
     ],
     [
       "Ramin Rezaeian",
-      "IRI",
+      "IRN",
       "MF",
       2,
       1,
@@ -1190,7 +1190,7 @@
     ],
     [
       "Livano Comenencia",
-      "CUR",
+      "CUW",
       "MF",
       2,
       1,
@@ -1320,7 +1320,7 @@
     ],
     [
       "Amad Diallo",
-      "CTE",
+      "CIV",
       "FW",
       2,
       1,
@@ -1350,7 +1350,7 @@
     ],
     [
       "Ayman Hussein",
-      "IRA",
+      "IRQ",
       "FW",
       2,
       1,
@@ -1370,7 +1370,7 @@
     ],
     [
       "Jovo Lukić",
-      "BOS",
+      "BIH",
       "FW",
       2,
       1,
@@ -1390,7 +1390,7 @@
     ],
     [
       "Yoane Wissa",
-      "CON",
+      "COD",
       "FW",
       2,
       1,
@@ -1400,7 +1400,7 @@
     ],
     [
       "Kenan Yıldız",
-      "TRK",
+      "TUR",
       "MF",
       2,
       0,
@@ -1520,7 +1520,7 @@
     ],
     [
       "Franck Kessié",
-      "CTE",
+      "CIV",
       "MF",
       2,
       1,
@@ -1590,7 +1590,7 @@
     ],
     [
       "Mohammad Mohebi",
-      "IRI",
+      "IRN",
       "MF",
       2,
       1,
@@ -1600,7 +1600,7 @@
     ],
     [
       "Teboho Mokoena",
-      "SOU",
+      "RSA",
       "MF",
       2,
       1,
@@ -1640,7 +1640,7 @@
     ],
     [
       "Kevin Pina",
-      "CAB",
+      "CPV",
       "MF",
       2,
       1,
@@ -1680,7 +1680,7 @@
     ],
     [
       "Wilfried Singo",
-      "CTE",
+      "CIV",
       "DF",
       2,
       0,
@@ -1690,7 +1690,7 @@
     ],
     [
       "Finn Surman",
-      "NEW",
+      "NZL",
       "DF",
       2,
       1,
@@ -1770,7 +1770,7 @@
     ],
     [
       "Hakan Çalhanoğlu",
-      "TRK",
+      "TUR",
       "MF",
       2,
       0,
@@ -1820,7 +1820,7 @@
     ],
     [
       "Arda Güler",
-      "TRK",
+      "TUR",
       "MF",
       2,
       0,
@@ -1850,7 +1850,7 @@
     ],
     [
       "Ermin Mahmić",
-      "BOS",
+      "BIH",
       "MF",
       1,
       1,
@@ -2040,7 +2040,7 @@
     ],
     [
       "Hélio Varela",
-      "CAB",
+      "CPV",
       "FW",
       1,
       1,
@@ -2050,7 +2050,7 @@
     ],
     [
       "Amir Al Ammari",
-      "IRA",
+      "IRQ",
       "MF",
       2,
       0,
@@ -2110,7 +2110,7 @@
     ],
     [
       "Sead Kolašinac",
-      "BOS",
+      "BIH",
       "DF",
       2,
       0,
@@ -2130,7 +2130,7 @@
     ],
     [
       "Arthur Masuaku",
-      "CON",
+      "COD",
       "DF",
       2,
       0,
@@ -2210,7 +2210,7 @@
     ],
     [
       "Tim Payne",
-      "NEW",
+      "NZL",
       "DF",
       2,
       0,
@@ -2320,7 +2320,7 @@
     ],
     [
       "Merih Demiral",
-      "TRK",
+      "TUR",
       "DF",
       2,
       0,
@@ -2330,7 +2330,7 @@
     ],
     [
       "Ali Al Hamadi",
-      "IRA",
+      "IRQ",
       "FW",
       2,
       0,
@@ -2400,7 +2400,7 @@
     ],
     [
       "Seko Fofana",
-      "CTE",
+      "CIV",
       "MF",
       2,
       0,
@@ -2470,7 +2470,7 @@
     ],
     [
       "İsmail Yüksek",
-      "TRK",
+      "TUR",
       "MF",
       2,
       0,
@@ -2500,7 +2500,7 @@
     ],
     [
       "Juninho Bacuna",
-      "CUR",
+      "CUW",
       "MF",
       2,
       0,
@@ -2510,7 +2510,7 @@
     ],
     [
       "Leandro Bacuna",
-      "CUR",
+      "CUW",
       "MF",
       2,
       0,
@@ -2530,7 +2530,7 @@
     ],
     [
       "Saeid Ezatolahi",
-      "IRI",
+      "IRN",
       "MF",
       2,
       0,
@@ -2550,7 +2550,7 @@
     ],
     [
       "Mbekezeli Mbokazi",
-      "SOU",
+      "RSA",
       "DF",
       2,
       0,
@@ -2560,7 +2560,7 @@
     ],
     [
       "Callum McCowatt",
-      "NEW",
+      "NZL",
       "MF",
       2,
       0,
@@ -2580,7 +2580,7 @@
     ],
     [
       "Aubrey Modiba",
-      "SOU",
+      "RSA",
       "DF",
       2,
       0,
@@ -2630,7 +2630,7 @@
     ],
     [
       "Sarpreet Singh",
-      "NEW",
+      "NZL",
       "MF",
       2,
       0,
@@ -2670,7 +2670,7 @@
     ],
     [
       "Kerem Aktürkoğlu",
-      "TRK",
+      "TUR",
       "FW",
       2,
       0,
@@ -2690,7 +2690,7 @@
     ],
     [
       "Cédric Bakambu",
-      "CON",
+      "COD",
       "FW",
       2,
       0,
@@ -2760,7 +2760,7 @@
     ],
     [
       "Yan Diomandé",
-      "CTE",
+      "CIV",
       "MF",
       2,
       0,
@@ -2890,7 +2890,7 @@
     ],
     [
       "Thapelo Maseko",
-      "SOU",
+      "RSA",
       "FW",
       1,
       0,
@@ -2910,7 +2910,7 @@
     ],
     [
       "Ryan Mendes",
-      "CAB",
+      "CPV",
       "MF",
       2,
       0,
@@ -2920,7 +2920,7 @@
     ],
     [
       "Shahriar Moghanlou",
-      "IRI",
+      "IRN",
       "FW",
       2,
       0,
@@ -2930,7 +2930,7 @@
     ],
     [
       "Samuel Moutoussamy",
-      "CON",
+      "COD",
       "MF",
       2,
       0,
@@ -2940,7 +2940,7 @@
     ],
     [
       "Mert Müldür",
-      "TRK",
+      "TUR",
       "DF",
       2,
       0,
@@ -3070,7 +3070,7 @@
     ],
     [
       "Marko Stamenic",
-      "NEW",
+      "NZL",
       "MF",
       2,
       0,
@@ -3080,7 +3080,7 @@
     ],
     [
       "Mehdi Taremi",
-      "IRI",
+      "IRN",
       "FW",
       2,
       0,
@@ -3100,7 +3100,7 @@
     ],
     [
       "Can Uzun",
-      "TRK",
+      "TUR",
       "MF",
       1,
       0,
@@ -3180,7 +3180,7 @@
     ],
     [
       "Abdülkerim Bardakcı",
-      "TRK",
+      "TUR",
       "DF",
       2,
       0,
@@ -3270,7 +3270,7 @@
     ],
     [
       "Diney",
-      "CAB",
+      "CPV",
       "DF",
       2,
       0,
@@ -3290,7 +3290,7 @@
     ],
     [
       "Laros Duarte",
-      "CAB",
+      "CPV",
       "MF",
       2,
       0,
@@ -3300,7 +3300,7 @@
     ],
     [
       "Edin Džeko",
-      "BOS",
+      "BIH",
       "FW",
       1,
       0,
@@ -3350,7 +3350,7 @@
     ],
     [
       "Saman Ghoddos",
-      "IRI",
+      "IRN",
       "MF",
       2,
       0,
@@ -3380,7 +3380,7 @@
     ],
     [
       "Deniz Gül",
-      "TRK",
+      "TUR",
       "FW",
       2,
       0,
@@ -3410,7 +3410,7 @@
     ],
     [
       "Christ Inao Oulaï",
-      "CTE",
+      "CIV",
       "MF",
       2,
       0,
@@ -3470,7 +3470,7 @@
     ],
     [
       "Edo Kayembe",
-      "CON",
+      "COD",
       "MF",
       2,
       0,
@@ -3490,7 +3490,7 @@
     ],
     [
       "Ghislain Konan",
-      "CTE",
+      "CIV",
       "DF",
       2,
       0,
@@ -3540,7 +3540,7 @@
     ],
     [
       "Sidny Lopes Cabral",
-      "CAB",
+      "CPV",
       "DF",
       2,
       0,
@@ -3570,7 +3570,7 @@
     ],
     [
       "Evidence Makgopa",
-      "SOU",
+      "RSA",
       "FW",
       2,
       0,
@@ -3620,7 +3620,7 @@
     ],
     [
       "Amar Memić",
-      "BOS",
+      "BIH",
       "MF",
       2,
       0,
@@ -3660,7 +3660,7 @@
     ],
     [
       "Jamiro Monteiro",
-      "CAB",
+      "CPV",
       "MF",
       2,
       0,
@@ -3690,7 +3690,7 @@
     ],
     [
       "Nicolas Pépé",
-      "CTE",
+      "CIV",
       "FW",
       2,
       0,
@@ -3820,7 +3820,7 @@
     ],
     [
       "Zaid Tahseen",
-      "IRA",
+      "IRQ",
       "DF",
       2,
       0,
@@ -3890,7 +3890,7 @@
     ],
     [
       "Elye Wahi",
-      "CTE",
+      "CIV",
       "FW",
       1,
       0,
@@ -4050,7 +4050,7 @@
     ],
     [
       "Hussein Ali",
-      "IRA",
+      "IRQ",
       "DF",
       2,
       0,
@@ -4060,7 +4060,7 @@
     ],
     [
       "Ali Alipour",
-      "IRI",
+      "IRN",
       "FW",
       1,
       0,
@@ -4080,7 +4080,7 @@
     ],
     [
       "Barış Alper Yılmaz",
-      "TRK",
+      "TUR",
       "MF",
       2,
       0,
@@ -4140,7 +4140,7 @@
     ],
     [
       "Oswin Appollis",
-      "SOU",
+      "RSA",
       "FW",
       2,
       0,
@@ -4170,7 +4170,7 @@
     ],
     [
       "Ibrahim Bayesh",
-      "IRA",
+      "IRQ",
       "MF",
       2,
       0,
@@ -4190,7 +4190,7 @@
     ],
     [
       "Joe Bell",
-      "NEW",
+      "NZL",
       "MF",
       2,
       0,
@@ -4230,7 +4230,7 @@
     ],
     [
       "Tyler Bindon",
-      "NEW",
+      "NZL",
       "DF",
       2,
       0,
@@ -4250,7 +4250,7 @@
     ],
     [
       "Ange-Yoan Bonny",
-      "CTE",
+      "CIV",
       "FW",
       2,
       0,
@@ -4280,7 +4280,7 @@
     ],
     [
       "Dženis Burnić",
-      "BOS",
+      "BIH",
       "MF",
       1,
       0,
@@ -4290,7 +4290,7 @@
     ],
     [
       "Jovane Cabral",
-      "CAB",
+      "CPV",
       "FW",
       1,
       0,
@@ -4300,7 +4300,7 @@
     ],
     [
       "Liberato Cacace",
-      "NEW",
+      "NZL",
       "DF",
       2,
       0,
@@ -4330,7 +4330,7 @@
     ],
     [
       "Zeki Çelik",
-      "TRK",
+      "TUR",
       "DF",
       1,
       0,
@@ -4350,7 +4350,7 @@
     ],
     [
       "Tahith Chong",
-      "CUR",
+      "CUW",
       "MF",
       2,
       0,
@@ -4410,7 +4410,7 @@
     ],
     [
       "Amar Dedić",
-      "BOS",
+      "BIH",
       "DF",
       2,
       0,
@@ -4430,7 +4430,7 @@
     ],
     [
       "Ermedin Demirović",
-      "BOS",
+      "BIH",
       "FW",
       2,
       0,
@@ -4530,7 +4530,7 @@
     ],
     [
       "Sherel Floranus",
-      "CUR",
+      "CUW",
       "DF",
       2,
       0,
@@ -4540,7 +4540,7 @@
     ],
     [
       "Lyle Foster",
-      "SOU",
+      "RSA",
       "FW",
       1,
       0,
@@ -4580,7 +4580,7 @@
     ],
     [
       "Mehdi Ghayedi",
-      "IRI",
+      "IRN",
       "FW",
       1,
       0,
@@ -4650,7 +4650,7 @@
     ],
     [
       "Ehsan Hajsafi",
-      "IRI",
+      "IRN",
       "DF",
       2,
       0,
@@ -4680,7 +4680,7 @@
     ],
     [
       "Sontje Hansen",
-      "CUR",
+      "CUW",
       "FW",
       1,
       0,
@@ -4690,7 +4690,7 @@
     ],
     [
       "Akam Hashim",
-      "IRA",
+      "IRQ",
       "DF",
       2,
       0,
@@ -4720,7 +4720,7 @@
     ],
     [
       "Amirhossein Hosseinzadeh",
-      "IRI",
+      "IRN",
       "FW",
       2,
       0,
@@ -4760,7 +4760,7 @@
     ],
     [
       "Alireza Jahanbakhsh",
-      "IRI",
+      "IRN",
       "FW",
       1,
       0,
@@ -4800,7 +4800,7 @@
     ],
     [
       "Ferdi Kadioglu",
-      "TRK",
+      "TUR",
       "DF",
       2,
       0,
@@ -4810,7 +4810,7 @@
     ],
     [
       "Hossein Kanaanizadegan",
-      "IRI",
+      "IRN",
       "DF",
       1,
       0,
@@ -4820,7 +4820,7 @@
     ],
     [
       "Steve Kapuadi",
-      "CON",
+      "COD",
       "DF",
       2,
       0,
@@ -4840,7 +4840,7 @@
     ],
     [
       "Joris Kayembe",
-      "CON",
+      "COD",
       "DF",
       2,
       0,
@@ -4860,7 +4860,7 @@
     ],
     [
       "Shoja' Khalilzadeh",
-      "IRI",
+      "IRN",
       "DF",
       2,
       0,
@@ -4880,7 +4880,7 @@
     ],
     [
       "Orkun Kökçü",
-      "TRK",
+      "TUR",
       "MF",
       2,
       0,
@@ -4990,7 +4990,7 @@
     ],
     [
       "Dailon Livramento",
-      "CAB",
+      "CPV",
       "FW",
       1,
       0,
@@ -5000,7 +5000,7 @@
     ],
     [
       "Jürgen Locadia",
-      "CUR",
+      "CUW",
       "FW",
       2,
       0,
@@ -5040,7 +5040,7 @@
     ],
     [
       "Jearl Margaritha",
-      "CUR",
+      "CUW",
       "FW",
       2,
       0,
@@ -5080,7 +5080,7 @@
     ],
     [
       "Thalente Mbatha",
-      "SOU",
+      "RSA",
       "MF",
       2,
       0,
@@ -5090,7 +5090,7 @@
     ],
     [
       "Nathanaël Mbuku",
-      "CON",
+      "COD",
       "MF",
       1,
       0,
@@ -5120,7 +5120,7 @@
     ],
     [
       "Relebohile Mofokeng",
-      "SOU",
+      "RSA",
       "MF",
       1,
       0,
@@ -5130,7 +5130,7 @@
     ],
     [
       "Steven Moreira",
-      "CAB",
+      "CPV",
       "DF",
       2,
       0,
@@ -5150,7 +5150,7 @@
     ],
     [
       "Tarik Muharemovic",
-      "BOS",
+      "BIH",
       "DF",
       2,
       0,
@@ -5170,7 +5170,7 @@
     ],
     [
       "Ali Nemati",
-      "IRI",
+      "IRN",
       "DF",
       2,
       0,
@@ -5240,7 +5240,7 @@
     ],
     [
       "Charles Pickel",
-      "CON",
+      "COD",
       "DF",
       2,
       0,
@@ -5250,7 +5250,7 @@
     ],
     [
       "Pico",
-      "CAB",
+      "CPV",
       "DF",
       2,
       0,
@@ -5280,7 +5280,7 @@
     ],
     [
       "Iqraam Rayners",
-      "SOU",
+      "RSA",
       "FW",
       2,
       0,
@@ -5470,7 +5470,7 @@
     ],
     [
       "Rebin Sulaka",
-      "IRA",
+      "IRQ",
       "DF",
       1,
       0,
@@ -5500,7 +5500,7 @@
     ],
     [
       "Benjamin Tahirovic",
-      "BOS",
+      "BIH",
       "MF",
       2,
       0,
@@ -5640,7 +5640,7 @@
     ],
     [
       "Aria Yousefi",
-      "IRI",
+      "IRN",
       "MF",
       1,
       0,
@@ -5790,7 +5790,7 @@
     ],
     [
       "Jayden Adams",
-      "SOU",
+      "RSA",
       "MF",
       2,
       0,
@@ -5820,7 +5820,7 @@
     ],
     [
       "Simon Adingra",
-      "CTE",
+      "CIV",
       "FW",
       1,
       0,
@@ -5840,7 +5840,7 @@
     ],
     [
       "Emmanuel Agbadou",
-      "CTE",
+      "CIV",
       "DF",
       2,
       0,
@@ -5870,7 +5870,7 @@
     ],
     [
       "Yunus Akgün",
-      "TRK",
+      "TUR",
       "MF",
       2,
       0,
@@ -5890,7 +5890,7 @@
     ],
     [
       "Kerim Alajbegović",
-      "BOS",
+      "BIH",
       "MF",
       2,
       0,
@@ -5900,7 +5900,7 @@
     ],
     [
       "Mohanad Ali",
-      "IRA",
+      "IRQ",
       "FW",
       1,
       0,
@@ -5970,7 +5970,7 @@
     ],
     [
       "Youssef Amyn",
-      "IRA",
+      "IRQ",
       "MF",
       1,
       0,
@@ -6000,7 +6000,7 @@
     ],
     [
       "Jeremy Antonisse",
-      "CUR",
+      "CUW",
       "FW",
       1,
       0,
@@ -6030,7 +6030,7 @@
     ],
     [
       "Telmo Arcanjo",
-      "CAB",
+      "CPV",
       "MF",
       2,
       0,
@@ -6120,7 +6120,7 @@
     ],
     [
       "Esmir Bajraktarevic",
-      "BOS",
+      "BIH",
       "MF",
       2,
       0,
@@ -6130,7 +6130,7 @@
     ],
     [
       "Simon Banza",
-      "CON",
+      "COD",
       "FW",
       2,
       0,
@@ -6140,7 +6140,7 @@
     ],
     [
       "Ivan Bašić",
-      "BOS",
+      "BIH",
       "MF",
       2,
       0,
@@ -6150,7 +6150,7 @@
     ],
     [
       "Ahmed Basil",
-      "IRA",
+      "IRQ",
       "GK",
       1,
       0,
@@ -6160,7 +6160,7 @@
     ],
     [
       "Samed Baždar",
-      "BOS",
+      "BIH",
       "FW",
       1,
       0,
@@ -6170,7 +6170,7 @@
     ],
     [
       "Riechedly Bazoer",
-      "CUR",
+      "CUW",
       "DF",
       1,
       0,
@@ -6200,7 +6200,7 @@
     ],
     [
       "Alireza Beiranvand",
-      "IRI",
+      "IRN",
       "GK",
       2,
       0,
@@ -6230,7 +6230,7 @@
     ],
     [
       "Gilson Benchimol",
-      "CAB",
+      "CPV",
       "FW",
       1,
       0,
@@ -6320,7 +6320,7 @@
     ],
     [
       "Michael Boxall",
-      "NEW",
+      "NZL",
       "DF",
       2,
       0,
@@ -6340,7 +6340,7 @@
     ],
     [
       "Joshua Brenet",
-      "CUR",
+      "CUW",
       "DF",
       1,
       0,
@@ -6390,7 +6390,7 @@
     ],
     [
       "Uğurcan Çakır",
-      "TRK",
+      "TUR",
       "GK",
       2,
       0,
@@ -6550,7 +6550,7 @@
     ],
     [
       "Nuno da Costa",
-      "CAB",
+      "CPV",
       "FW",
       2,
       0,
@@ -6580,7 +6580,7 @@
     ],
     [
       "Max Crocombe",
-      "NEW",
+      "NZL",
       "GK",
       2,
       0,
@@ -6790,7 +6790,7 @@
     ],
     [
       "Merchas Doski",
-      "IRA",
+      "IRQ",
       "DF",
       2,
       0,
@@ -6800,7 +6800,7 @@
     ],
     [
       "Guéla Doué",
-      "CTE",
+      "CIV",
       "DF",
       2,
       0,
@@ -6810,7 +6810,7 @@
     ],
     [
       "Deroy Duarte",
-      "CAB",
+      "CPV",
       "MF",
       2,
       0,
@@ -6820,7 +6820,7 @@
     ],
     [
       "Roshon van Eijma",
-      "CUR",
+      "CUW",
       "DF",
       1,
       0,
@@ -6830,7 +6830,7 @@
     ],
     [
       "Callan Elliot",
-      "NEW",
+      "NZL",
       "DF",
       1,
       0,
@@ -6840,7 +6840,7 @@
     ],
     [
       "Eren Elmalı",
-      "TRK",
+      "TUR",
       "DF",
       1,
       0,
@@ -6910,7 +6910,7 @@
     ],
     [
       "Marko Farji",
-      "IRA",
+      "IRQ",
       "MF",
       2,
       0,
@@ -6960,7 +6960,7 @@
     ],
     [
       "Yahia Fofana",
-      "CTE",
+      "CIV",
       "GK",
       2,
       0,
@@ -6970,7 +6970,7 @@
     ],
     [
       "Deveron Fonville",
-      "CUR",
+      "CUW",
       "DF",
       2,
       0,
@@ -7020,7 +7020,7 @@
     ],
     [
       "Juriën Gaari",
-      "CUR",
+      "CUW",
       "DF",
       1,
       0,
@@ -7080,7 +7080,7 @@
     ],
     [
       "Armin Gigovic",
-      "BOS",
+      "BIH",
       "MF",
       1,
       0,
@@ -7150,7 +7150,7 @@
     ],
     [
       "Kenji Gorré",
-      "CUR",
+      "CUW",
       "FW",
       1,
       0,
@@ -7180,7 +7180,7 @@
     ],
     [
       "Evann Guessand",
-      "CTE",
+      "CIV",
       "FW",
       1,
       0,
@@ -7230,7 +7230,7 @@
     ],
     [
       "Amir Hadžiahmetović",
-      "BOS",
+      "BIH",
       "MF",
       1,
       0,
@@ -7280,7 +7280,7 @@
     ],
     [
       "Saleh Hardani",
-      "IRI",
+      "IRN",
       "DF",
       1,
       0,
@@ -7290,7 +7290,7 @@
     ],
     [
       "Jalal Hassan",
-      "IRA",
+      "IRQ",
       "GK",
       1,
       0,
@@ -7440,7 +7440,7 @@
     ],
     [
       "Zidane Iqbal",
-      "IRA",
+      "IRQ",
       "MF",
       2,
       0,
@@ -7460,7 +7460,7 @@
     ],
     [
       "Zaid Ismail",
-      "IRA",
+      "IRQ",
       "MF",
       2,
       0,
@@ -7500,7 +7500,7 @@
     ],
     [
       "Ali Jasim",
-      "IRA",
+      "IRQ",
       "MF",
       1,
       0,
@@ -7590,7 +7590,7 @@
     ],
     [
       "Gédéon Kalulu",
-      "CON",
+      "COD",
       "DF",
       1,
       0,
@@ -7600,7 +7600,7 @@
     ],
     [
       "Gervane Kastaneer",
-      "CUR",
+      "CUW",
       "FW",
       2,
       0,
@@ -7610,7 +7610,7 @@
     ],
     [
       "Nikola Katić",
-      "BOS",
+      "BIH",
       "DF",
       2,
       0,
@@ -7640,7 +7640,7 @@
     ],
     [
       "Odilon Kossounou",
-      "CTE",
+      "CIV",
       "DF",
       2,
       0,
@@ -7870,7 +7870,7 @@
     ],
     [
       "Chancel Mbemba",
-      "CON",
+      "COD",
       "DF",
       2,
       0,
@@ -7940,7 +7940,7 @@
     ],
     [
       "Milad Mohammadi",
-      "IRI",
+      "IRN",
       "DF",
       2,
       0,
@@ -8020,7 +8020,7 @@
     ],
     [
       "Lionel Mpasi",
-      "CON",
+      "COD",
       "GK",
       2,
       0,
@@ -8030,7 +8030,7 @@
     ],
     [
       "Khuliso Mudau",
-      "SOU",
+      "RSA",
       "DF",
       2,
       0,
@@ -8050,7 +8050,7 @@
     ],
     [
       "Ngal'Ayel Mukau",
-      "CON",
+      "COD",
       "MF",
       2,
       0,
@@ -8170,7 +8170,7 @@
     ],
     [
       "Armando Obispo",
-      "CUR",
+      "CUW",
       "DF",
       2,
       0,
@@ -8180,7 +8180,7 @@
     ],
     [
       "Ime Okon",
-      "SOU",
+      "RSA",
       "DF",
       2,
       0,
@@ -8190,7 +8190,7 @@
     ],
     [
       "Ben Old",
-      "NEW",
+      "NZL",
       "MF",
       2,
       0,
@@ -8280,7 +8280,7 @@
     ],
     [
       "Salih Özcan",
-      "TRK",
+      "TUR",
       "MF",
       1,
       0,
@@ -8320,7 +8320,7 @@
     ],
     [
       "João Paulo Fernandes",
-      "CAB",
+      "CPV",
       "DF",
       1,
       0,
@@ -8440,7 +8440,7 @@
     ],
     [
       "Ahmed Qasem",
-      "IRA",
+      "IRQ",
       "FW",
       2,
       0,
@@ -8500,7 +8500,7 @@
     ],
     [
       "Jesse Randall",
-      "NEW",
+      "NZL",
       "MF",
       2,
       0,
@@ -8600,7 +8600,7 @@
     ],
     [
       "Garry Rodrigues",
-      "CAB",
+      "CPV",
       "MF",
       1,
       0,
@@ -8630,7 +8630,7 @@
     ],
     [
       "Godfried Roemeratoe",
-      "CUR",
+      "CUW",
       "MF",
       1,
       0,
@@ -8660,7 +8660,7 @@
     ],
     [
       "Eloy Room",
-      "CUR",
+      "CUW",
       "GK",
       2,
       0,
@@ -8690,7 +8690,7 @@
     ],
     [
       "Mustafa Saadoon",
-      "IRA",
+      "IRQ",
       "DF",
       1,
       0,
@@ -8700,7 +8700,7 @@
     ],
     [
       "Noah Sadiki",
-      "CON",
+      "COD",
       "MF",
       2,
       0,
@@ -8740,7 +8740,7 @@
     ],
     [
       "Ibrahim Sangaré",
-      "CTE",
+      "CIV",
       "MF",
       2,
       0,
@@ -8790,7 +8790,7 @@
     ],
     [
       "Kamogelo Sebelebele",
-      "SOU",
+      "RSA",
       "DF",
       1,
       0,
@@ -8830,7 +8830,7 @@
     ],
     [
       "Willy Semedo",
-      "CAB",
+      "CPV",
       "FW",
       1,
       0,
@@ -8890,7 +8890,7 @@
     ],
     [
       "Aimar Sher",
-      "IRA",
+      "IRQ",
       "MF",
       1,
       0,
@@ -8920,7 +8920,7 @@
     ],
     [
       "Nkosinathi Sibisi",
-      "SOU",
+      "RSA",
       "DF",
       1,
       0,
@@ -8960,7 +8960,7 @@
     ],
     [
       "Sphephelo Sithole",
-      "SOU",
+      "RSA",
       "MF",
       1,
       0,
@@ -9040,7 +9040,7 @@
     ],
     [
       "Ivan Šunjić",
-      "BOS",
+      "BIH",
       "MF",
       2,
       0,
@@ -9160,7 +9160,7 @@
     ],
     [
       "Ryan Thomas",
-      "NEW",
+      "NZL",
       "FW",
       2,
       0,
@@ -9200,7 +9200,7 @@
     ],
     [
       "Mehdi Torabi",
-      "IRI",
+      "IRN",
       "MF",
       1,
       0,
@@ -9220,7 +9220,7 @@
     ],
     [
       "Bazoumana Touré",
-      "CTE",
+      "CIV",
       "MF",
       1,
       0,
@@ -9240,7 +9240,7 @@
     ],
     [
       "Axel Tuanzebe",
-      "CON",
+      "COD",
       "DF",
       2,
       0,
@@ -9300,7 +9300,7 @@
     ],
     [
       "Nikola Vasilj",
-      "BOS",
+      "BIH",
       "GK",
       2,
       0,
@@ -9390,7 +9390,7 @@
     ],
     [
       "Vozinha",
-      "CAB",
+      "CPV",
       "GK",
       2,
       0,
@@ -9400,7 +9400,7 @@
     ],
     [
       "Francis de Vries",
-      "NEW",
+      "NZL",
       "DF",
       1,
       0,
@@ -9420,7 +9420,7 @@
     ],
     [
       "Aaron Wan-Bissaka",
-      "CON",
+      "COD",
       "DF",
       2,
       0,
@@ -9470,7 +9470,7 @@
     ],
     [
       "Ronwen Williams",
-      "SOU",
+      "RSA",
       "GK",
       2,
       0,
@@ -9490,7 +9490,7 @@
     ],
     [
       "Yannick",
-      "CAB",
+      "CPV",
       "MF",
       1,
       0,
@@ -9550,7 +9550,7 @@
     ],
     [
       "Themba Zwane",
-      "SOU",
+      "RSA",
       "FW",
       1,
       0,

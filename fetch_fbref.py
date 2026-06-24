@@ -41,7 +41,8 @@ LEAGUE = "INT-World Cup"
 SEASON = "2026"
 OUT = Path("public/data.json")
 
-# Full FBref nation name -> 3-letter code (fallback: first 3 alpha chars upper).
+# FBref nation name -> FIFA 3-letter code (fallback: first 3 alpha chars upper).
+# Keyed by the exact squad name FBref uses (e.g. "IR Iran", "Türkiye").
 CODES = {
     "Argentina": "ARG", "France": "FRA", "Brazil": "BRA", "Spain": "ESP",
     "England": "ENG", "Portugal": "POR", "Netherlands": "NED", "Germany": "GER",
@@ -51,7 +52,13 @@ CODES = {
     "Switzerland": "SUI", "Denmark": "DEN", "South Korea": "KOR",
     "Korea Republic": "KOR", "Australia": "AUS", "Poland": "POL", "Serbia": "SRB",
     "Ecuador": "ECU", "Norway": "NOR", "Egypt": "EGY", "Nigeria": "NGA",
-    "Ghana": "GHA", "Iran": "IRN", "Austria": "AUT", "Ukraine": "UKR",
+    "Ghana": "GHA", "Iran": "IRN", "IR Iran": "IRN", "Austria": "AUT",
+    "Ukraine": "UKR", "Sweden": "SWE", "New Zealand": "NZL", "Algeria": "ALG",
+    "Bosnia & Herz.": "BIH", "Cabo Verde": "CPV", "Czechia": "CZE",
+    "Côte d'Ivoire": "CIV", "Jordan": "JOR", "Paraguay": "PAR",
+    "Congo DR": "COD", "Curaçao": "CUW", "Iraq": "IRQ", "Qatar": "QAT",
+    "Scotland": "SCO", "South Africa": "RSA", "Tunisia": "TUN",
+    "Uzbekistan": "UZB", "Haiti": "HAI", "Panama": "PAN", "Türkiye": "TUR",
 }
 
 
@@ -219,6 +226,10 @@ def main():
 
     teams = []
     for name in sorted(set(rec) | set(tshoot)):
+        # Defense in depth: never emit blank or opponent ("vs ...") rows even if
+        # an upstream filter regresses (see the 96-team "vs"-table incident).
+        if not name or name.lower().startswith("vs "):
+            continue
         r = rec.get(name, dict(P=0, W=0, D=0, L=0, GF=0, GA=0))
         sh, sot = tshoot.get(name, (0, 0))
         teams.append([
@@ -242,6 +253,13 @@ def main():
         ])
     # keep the most relevant first: goals+assists, with a nudge for shot volume
     players.sort(key=lambda x: -(x[4] + x[5] + 0.1 * x[6]))
+
+    # Don't overwrite good data with an empty/partial scrape: if a competition
+    # page was blocked (CAPTCHA/IP) it can return 200 with no rows. Bail loudly
+    # so refresh.sh aborts and the last good public/data.json stays published.
+    if not teams or not players:
+        sys.exit(f"Refusing to write: got {len(teams)} teams / {len(players)} "
+                 "players. FBref likely blocked a page; keeping existing data.json.")
 
     matchday = max((t[2] for t in teams), default=0)
     payload = {
