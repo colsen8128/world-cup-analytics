@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { deriveData } from "./derive.js";
 
 /* ------------------------------------------------------------------ *
  *  DATA LAYER
@@ -71,35 +72,6 @@ const SAMPLE = {
     ["A. Griezmann", "FRA", "FW", 3, 1, 2, 9, 4],
   ],
 };
-
-function deriveData(RAW) {
-  const teams = RAW.teams.map(([code, name, P, W, D, L, GF, GA, shots, sot, cor]) => {
-    const pts = W * 3 + D;
-    const per = (n) => (P > 0 ? n / P : 0); // avoid NaN/Infinity for 0-game teams
-    return {
-      code, name, P, W, D, L, GF, GA, shots, sot, cor, pts,
-      gpg: per(GF),           // goals per game
-      apg: per(GA),           // allowed goals per game
-      gdpg: per(GF - GA),     // goal difference per game
-      spg: per(shots),        // total shots per game
-      sotpg: per(sot),        // shots on target per game
-      cpg: per(cor),          // corners per game
-    };
-  });
-  const teamByCode = Object.fromEntries(teams.map((t) => [t.code, t]));
-  const players = RAW.players.map(([name, team, pos, P, G, A, sh, sog]) => {
-    const per = (n) => (P > 0 ? n / P : 0);
-    return {
-      name, team, pos, P, G, A, sh, sog,
-      gpg: per(G),     // goals per game
-      apg: per(A),     // assists per game
-      shpg: per(sh),   // shots per game
-      sogpg: per(sog), // shots on goal per game
-      teamName: teamByCode[team]?.name ?? team,
-    };
-  });
-  return { updated: RAW.updated, matchday: RAW.matchday, teams, players };
-}
 
 /* ------------------------------------------------------------------ *
  *  STYLES — floodlit-night broadcast palette

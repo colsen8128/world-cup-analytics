@@ -10,9 +10,11 @@ match day.
 - **Players** — full sortable table: goals/game, assists/game, shots/game,
   shots on goal/game
 
-The dashboard reads a single `public/data.json`. A scheduled job regenerates
-that file from FBref each day. Swap the data source without touching the UI — the
-front end only knows about `data.json`.
+The dashboard reads a single `public/data.json`. A scheduled GitHub Actions job
+regenerates that file from **ESPN** (near-live, and its public API isn't
+IP-blocked, so it runs in CI). **FBref** is kept as an independent second opinion
+to validate the numbers. Swap the data source without touching the UI — the front
+end only knows about `data.json`.
 
 ---
 
@@ -28,9 +30,15 @@ World Cup Analytics/
 │   └── Dashboard.jsx          # the three-page dashboard
 ├── public/
 │   └── data.json              # the data the dashboard reads (sample to start)
-├── fetch_fbref.py             # data pipeline: FBref -> public/data.json
+├── fetch_espn.py              # PRIMARY data pipeline: ESPN -> public/data.json
+├── fetch_fbref.py             # FBref pipeline, now used as the validator source
+├── validate.py                # gating validation (schema/invariant/reconcile/temporal)
+├── validate_external.py       # advisory cross-source audit vs FBref (local only)
+├── test/derive.test.mjs       # golden test for the UI per-game math
 ├── probe_balldontlie.py       # optional: tier-check a BALLDONTLIE API key
-└── .github/workflows/update.yml  # daily auto-refresh
+└── .github/workflows/
+    ├── refresh-data.yml       # scheduled ESPN fetch + validate + commit
+    └── deploy.yml             # build + publish to GitHub Pages on push
 ```
 
 ---
@@ -48,51 +56,69 @@ It renders the bundled sample data immediately, then replaces it with
 `public/data.json` if that file is present. Build for production with
 `npm run build` (output in `dist/`).
 
-## 2. Generate real data from FBref
+## 2. Generate real data from ESPN
 
-Requires Python 3.10+. FBref must be reachable from the machine you run this on.
+Requires Python 3.9+ — standard library only, nothing to install.
 
 ```bash
-python3 -m venv venv
-source venv/bin/activate          # Windows: venv\Scripts\activate
-pip install soccerdata lxml html5lib pandas
-python3 fetch_fbref.py            # writes public/data.json
+python3 fetch_espn.py            # writes public/data.json
 ```
 
 Then reload the dashboard — the footer flips from "Sample data" to "Live data".
 
-### How the eleven stats are sourced
-- **Goals, assists, matches played** — FBref *standard* table (via soccerdata)
-- **Shots, shots on target** (teams and players) — FBref *shooting* table
-- **Record (W-D-L), goals for/against** — computed from the match schedule
-- **Corners** — one direct read of FBref's team passing-types table, because
-  soccerdata doesn't expose it. If that table changes, corners fall back to 0
-  and the rest of the run is unaffected.
+### How the eleven stats are sourced (ESPN)
+- **Goals, assists, shots, shots on target, matches played** — ESPN match
+  summaries (`rosters[].roster[].stats`), accumulated across every finished match
+- **Total shots / on target / corners** (teams) — ESPN match boxscore team stats
+- **Record (W-D-L), goals for/against** — the final scores from the scoreboard
 
-soccerdata caches every page under `~/soccerdata` and rate-limits requests —
-leave that on. Re-runs are fast and stay polite to FBref. Review FBref's data
-usage terms before any commercial use.
+ESPN match summaries are immutable once final, so `fetch_espn.py` caches them under
+`.espn_cache/` (gitignored) and only re-fetches the live day — re-runs are fast and
+polite. ESPN's data comes from a different provider than FBref (Opta), which is why
+FBref makes a good independent validator (below).
 
 ## 3. Refresh the data and publish
 
-FBref/Cloudflare blocks datacenter IPs, so `fetch_fbref.py` **can't run on
-GitHub Actions** — it must run from a machine with a normal (residential) IP,
-like your Mac. One command does the whole loop (fetch → commit → push):
+This is **automated in CI**. `.github/workflows/refresh-data.yml` runs on a
+schedule: it fetches ESPN, runs `validate.py` (which blocks the commit on any
+error), commits `public/data.json`, and pushes. That push triggers
+`deploy.yml`, which rebuilds and republishes to GitHub Pages in ~1–2 minutes.
+ESPN's public API isn't IP-blocked, so unlike the old FBref pipeline this runs
+fine on GitHub's runners — no local machine required.
+
+To refresh by hand (and additionally run the FBref second opinion), use:
 
 ```bash
 npm run refresh        # or: ./refresh.sh
 ```
 
-The push to `main` triggers `.github/workflows/deploy.yml`, which builds the
-site with `npm ci && npm run build` and publishes `dist/` to GitHub Pages via
-`actions/deploy-pages`. The live site updates in ~1–2 minutes. Run `npm run
-refresh` whenever you want fresh numbers (e.g. after each match day).
+`refresh.sh` does the ESPN fetch + validation locally, then — if you've set up
+the `venv` (see below) — runs `validate_external.py`, the advisory cross-check
+against FBref. That check is local-only because FBref/Cloudflare blocks
+datacenter IPs; it never blocks publishing.
 
-> Want true hands-off daily automation? Switch the data source in
-> `fetch_fbref.py` to an API that allows datacenter access (API-Football,
-> BALLDONTLIE GOAT, etc. — see the table below) and move the fetch back into a
-> scheduled workflow. The dashboard never changes, since it only reads
-> `data.json`.
+## 4. Validate the data
+
+Two independent guards keep the numbers honest:
+
+- **`validate.py` (gating)** — schema, football invariants, cross-table
+  reconciliation, and temporal monotonicity vs the last commit. A single error
+  aborts the refresh so a bad scrape can't overwrite good data. Runs in CI.
+- **`validate_external.py` (advisory, local)** — cross-checks ESPN's numbers
+  against FBref (Opta). When FBref has caught up it should agree; when it lags a
+  just-finished match it's reported as "behind", not an error. Needs the FBref
+  venv and a residential IP.
+
+The UI's per-game math has its own golden test: `npm test`.
+
+### FBref validator setup (optional)
+
+```bash
+python3 -m venv venv
+source venv/bin/activate          # Windows: venv\Scripts\activate
+pip install soccerdata lxml html5lib pandas
+python3 validate_external.py      # ESPN data.json vs FBref, writes a report
+```
 
 ---
 
@@ -116,12 +142,14 @@ paying — run the probe during that window.
 
 | Source | Cost | Your 11 stats | Notes |
 |---|---|---|---|
-| **FBref via soccerdata** | Free | 10 direct + corners via 1 extra read | Opta-sourced, accurate; you maintain a scraper |
-| Community CSV datasets | Free | Yes (incl. corners) | Lowest effort; depends on a maintainer, gaps possible |
-| API-Football | ~€19/mo | Yes | Cheaper paid option; older-school API |
-| BALLDONTLIE | $39.99/mo (GOAT) | Yes | Cleanest integration, xG/shot maps |
+| **ESPN hidden API** | Free | Yes (incl. corners) | Near-live, no key, **not IP-blocked → runs in CI**; undocumented but stable |
+| FBref via soccerdata | Free | 10 direct + corners via 1 extra read | Opta-sourced; datacenter-IP-blocked, lags live by hours. Now the **validator** |
+| API-Football | Free tier / ~€19/mo | Yes | Independent; free tier had no 2026 fixtures loaded when checked |
+| BALLDONTLIE | $39.99/mo (GOAT) | Yes | Shots/corners gated behind the paid tier |
 | Sportmonks / TheStatsAPI | €50-100+/mo | Yes | Most reliable live; priciest |
 
-Current choice: **FBref**. The pipeline is isolated in `fetch_fbref.py`, so
-switching later only means rewriting that one file to emit the same
-`data.json` shape.
+Current choice: **ESPN** as source of truth, **FBref** as an independent
+validator. Each pipeline is isolated (`fetch_espn.py` / `fetch_fbref.py`) and
+emits the same `data.json` shape, so the UI never changes. ESPN was chosen after
+FBref repeatedly lagged just-finished matches (its Opta comp pages update hours
+after kickoff), which stale-data incidents kept surfacing.
