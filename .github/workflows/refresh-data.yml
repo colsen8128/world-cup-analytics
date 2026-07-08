@@ -1,0 +1,56 @@
+name: Refresh data (ESPN)
+
+# Pulls fresh World Cup stats from ESPN, validates them, and commits
+# public/data.json. ESPN's public API is not IP-blocked (unlike FBref), so unlike
+# fetch_fbref.py this CAN run in CI — no local machine needed. The commit to main
+# triggers deploy.yml, which republishes the dashboard.
+#
+# fetch_espn.py and validate.py use only the Python standard library, so there's
+# nothing to install.
+
+on:
+  schedule:
+    - cron: "0 */2 * * *"   # every 2 hours (UTC; GitHub cron is best-effort)
+  workflow_dispatch: {}
+
+# Don't stack refreshes; let an in-progress one finish.
+concurrency:
+  group: refresh-data
+  cancel-in-progress: false
+
+permissions:
+  contents: write            # to commit data.json back to the repo
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        # Full history so validate.py's temporal check can read the previous
+        # data.json via `git show HEAD:public/data.json`.
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch latest stats from ESPN
+        run: python3 fetch_espn.py public/data.json
+
+      - name: Validate (blocks the commit on any ERROR)
+        run: python3 validate.py
+
+      - name: Commit data.json if it changed
+        run: |
+          if git diff --quiet -- public/data.json; then
+            echo "No data changes — nothing to commit."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data.json
+          # No [skip ci]: this push is what triggers deploy.yml to republish.
+          # (refresh-data.yml itself only runs on schedule/dispatch, so no loop.)
+          git commit -m "Update stats $(date -u +%FT%TZ)"
+          git push

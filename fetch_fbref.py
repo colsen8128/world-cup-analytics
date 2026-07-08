@@ -268,9 +268,10 @@ def main():
         "teams": teams,
         "players": players,
     }
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(payload, indent=2, ensure_ascii=False))
-    print(f"\nWrote {OUT}  ({len(teams)} teams, {len(players)} players, "
+    out = Path(sys.argv[1]) if len(sys.argv) > 1 else OUT
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(payload, indent=2, ensure_ascii=False))
+    print(f"\nWrote {out}  ({len(teams)} teams, {len(players)} players, "
           f"through ~{matchday} games)")
 
 

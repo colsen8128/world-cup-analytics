@@ -7,3 +7,5 @@ venv/
 
 # soccerdata / undetected-chromedriver scratch written into the cwd
 downloaded_files/
+.espn_cache/
+validation_external.txt
