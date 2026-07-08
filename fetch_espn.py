@@ -120,13 +120,16 @@ def _blank_team():
 
 
 def accumulate():
-    """Cumulative ESPN totals across all finished matches.
+    """Cumulative ESPN totals plus per-match splits across all finished matches.
 
-    Returns (teams, players):
+    Returns (teams, players, team_games, player_games):
       teams[code]               -> {name,P,W,D,L,GF,GA,shots,sot,cor}
-      players[(norm_name,code)] -> {name,P,goals,assists,shots,sog}
+      players[(norm_name,code)] -> {name,pos,P,goals,assists,shots,sog}
+      team_games[code]          -> [[date,opp,res,gf,ga,sh,sot,cor], ...]
+      player_games[code][norm]  -> {date: [goals,assists,shots,sog]}
     """
     teams, players, seen = {}, {}, set()
+    team_games, player_games = {}, {}
 
     for e in finished_events():
         eid = e["id"]
@@ -134,6 +137,7 @@ def accumulate():
             continue
         seen.add(eid)
         comp = e["competitions"][0]
+        day = e.get("date", "")[:10]
 
         # id -> (code, goals) for the two sides, from the scoreboard competitors.
         side = {}
@@ -144,29 +148,38 @@ def accumulate():
 
         summary = _get(f"{BASE}/summary?event={eid}", f"sum_{eid}.json")
 
-        # Team shooting/corners from the boxscore.
+        # Team shooting/corners from the boxscore — kept per match and summed.
+        match_team = {}
         for t in summary.get("boxscore", {}).get("teams", []):
             code = t["team"].get("abbreviation") or id2code.get(t["team"].get("id"), "")
             if not code:
                 continue
+            sh = int(_num(t.get("statistics"), "totalShots") or 0)
+            sot = int(_num(t.get("statistics"), "shotsOnTarget") or 0)
+            cor = int(_num(t.get("statistics"), "wonCorners") or 0)
+            match_team[code] = (sh, sot, cor)
             tt = teams.setdefault(code, _blank_team())
             tt["name"] = tt["name"] or t["team"].get("displayName", "")
-            tt["shots"] += int(_num(t.get("statistics"), "totalShots") or 0)
-            tt["sot"] += int(_num(t.get("statistics"), "shotsOnTarget") or 0)
-            tt["cor"] += int(_num(t.get("statistics"), "wonCorners") or 0)
+            tt["shots"] += sh
+            tt["sot"] += sot
+            tt["cor"] += cor
 
         # Record + goals from the final score (covers own goals, which belong to
-        # the team but to no player).
+        # the team but to no player), and one per-match row for each side.
         if len(side) == 2:
             (ia, (ca, ga)), (ib, (cb, gb)) = list(side.items())
-            for code, gf, ga_ in ((ca, ga, gb), (cb, gb, ga)):
+            for code, gf, ga_, opp in ((ca, ga, gb, cb), (cb, gb, ga, ca)):
                 tt = teams.setdefault(code, _blank_team())
                 tt["P"] += 1
                 tt["GF"] += gf
                 tt["GA"] += ga_
-                tt["W" if gf > ga_ else "L" if gf < ga_ else "D"] += 1
+                res = "W" if gf > ga_ else "L" if gf < ga_ else "D"
+                tt[res] += 1
+                sh, sot, cor = match_team.get(code, (0, 0, 0))
+                team_games.setdefault(code, []).append(
+                    [day, opp, res, gf, ga_, sh, sot, cor])
 
-        # Per-player shooting/scoring from the rosters.
+        # Per-player shooting/scoring from the rosters — kept per match and summed.
         for r in summary.get("rosters", []):
             code = r["team"].get("abbreviation") or id2code.get(r["team"].get("id"), "")
             for p in r.get("roster", []):
@@ -174,23 +187,35 @@ def accumulate():
                 if not appeared:
                     continue
                 disp = p["athlete"].get("displayName", "")
-                key = (norm_name(disp), code)
-                pp = players.setdefault(key, dict(name=disp, pos="", P=0, goals=0,
-                                                  assists=0, shots=0, sog=0))
+                nn = norm_name(disp)
+                pp = players.setdefault((nn, code), dict(name=disp, pos="", P=0, goals=0,
+                                                         assists=0, shots=0, sog=0))
                 role = _pos((p.get("position") or {}).get("abbreviation"))
                 if role and not pp["pos"]:      # keep the first real (non-SUB) role seen
                     pp["pos"] = role
+                g = int(_num(p.get("stats"), "totalGoals") or 0)
+                a = int(_num(p.get("stats"), "goalAssists") or 0)
+                sh = int(_num(p.get("stats"), "totalShots") or 0)
+                sog = int(_num(p.get("stats"), "shotsOnTarget") or 0)
                 pp["P"] += 1
-                pp["goals"] += int(_num(p.get("stats"), "totalGoals") or 0)
-                pp["assists"] += int(_num(p.get("stats"), "goalAssists") or 0)
-                pp["shots"] += int(_num(p.get("stats"), "totalShots") or 0)
-                pp["sog"] += int(_num(p.get("stats"), "shotsOnTarget") or 0)
+                pp["goals"] += g
+                pp["assists"] += a
+                pp["shots"] += sh
+                pp["sog"] += sog
+                player_games.setdefault(code, {}).setdefault(nn, {})[day] = [g, a, sh, sog]
 
-    return teams, players
+    return teams, players, team_games, player_games
 
 
-def build_data(teams, players) -> dict:
-    """Assemble the exact data.json shape the dashboard expects from ESPN aggregates."""
+def build_data(teams, players, team_games, player_games) -> dict:
+    """Assemble the exact data.json shape the dashboard expects from ESPN aggregates.
+
+    Adds a `games` block for the per-match dropdowns:
+      games.teams[code]           -> [[date,opp,res,gf,ga,sh,sot,cor], ...] recent-first
+      games.players[code][name]   -> {date: [goals,assists,shots,sog]}
+    The UI renders a player's games by walking games.teams[player.team] (so the
+    full schedule shows, incl. DNPs) and looking up each date in games.players.
+    """
     team_rows = []
     for code, t in teams.items():
         if not code:
@@ -200,13 +225,22 @@ def build_data(teams, players) -> dict:
     team_rows.sort(key=lambda x: -(x[6] / x[2]) if x[2] else 0)      # goals/game
 
     player_rows = []
-    for (_nn, code), p in players.items():
+    # Re-key each player's per-match splits from the internal norm_name to the
+    # exact display name in the row, so the UI can look them up by player.name.
+    pg_by_display = {}
+    for (nn, code), p in players.items():
         if p["P"] == 0 or not code:
             continue
         player_rows.append([p["name"], code, p["pos"], p["P"],
                             p["goals"], p["assists"], p["shots"], p["sog"]])
+        splits = player_games.get(code, {}).get(nn)
+        if splits:
+            pg_by_display.setdefault(code, {})[p["name"]] = splits
     # most relevant first: goals+assists, nudged by shot volume (matches old sort)
     player_rows.sort(key=lambda x: -(x[4] + x[5] + 0.1 * x[6]))
+
+    games_teams = {code: sorted(rows, key=lambda g: g[0], reverse=True)  # recent-first
+                   for code, rows in team_games.items()}
 
     matchday = max((r[2] for r in team_rows), default=0)
     return {
@@ -214,13 +248,14 @@ def build_data(teams, players) -> dict:
         "matchday": matchday,
         "teams": team_rows,
         "players": player_rows,
+        "games": {"teams": games_teams, "players": pg_by_display},
     }
 
 
 def write_data(path: str):
     """Fetch ESPN, build data.json, and write it — the primary data pipeline."""
-    teams, players = accumulate()
-    data = build_data(teams, players)
+    teams, players, team_games, player_games = accumulate()
+    data = build_data(teams, players, team_games, player_games)
     # Never overwrite good data with an empty pull (ESPN down / no matches yet).
     if not data["teams"] or not data["players"]:
         sys.exit(f"Refusing to write: got {len(data['teams'])} teams / "
@@ -235,7 +270,7 @@ def write_data(path: str):
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("-")]
     if "--summary" in sys.argv:
-        teams, players = accumulate()
+        teams, players, *_ = accumulate()
         print(f"ESPN: {len(teams)} teams, {len(players)} players across finished matches.")
         for p in sorted(players.values(), key=lambda p: -p["shots"])[:5]:
             print(f"  {p['name']:<22} {p['P']}g  {p['goals']}G {p['assists']}A  "

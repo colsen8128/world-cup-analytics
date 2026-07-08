@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, Fragment } from "react";
 import { deriveData } from "./derive.js";
 
 /* ------------------------------------------------------------------ *
@@ -238,6 +238,34 @@ const CSS = `
   .wc .wrap{padding:24px 18px 56px;}
 }
 @media (prefers-reduced-motion:reduce){.wc *{transition:none!important;}}
+
+/* ---- Accordion: clicking a row reveals its games as rows aligned to the same
+       columns (so a game's stats sit under the season per-game averages). ---- */
+.wc tbody tr.clickable{cursor:pointer;}
+.wc tbody tr.clickable:hover td{background:rgba(77,163,255,.06);}
+.wc tbody tr.open td{background:rgba(77,163,255,.10);}
+
+.wc .reschip{display:inline-block;font-family:'Barlow Condensed','Inter',sans-serif;font-weight:700;
+  font-size:11px;min-width:17px;height:17px;line-height:17px;text-align:center;border-radius:3px;
+  padding:0 3px;color:var(--base);}
+.wc .reschip.r-W{background:var(--pos);} .wc .reschip.r-L{background:var(--neg);} .wc .reschip.r-D{background:var(--muted2);}
+.wc .gres{display:inline-flex;align-items:center;gap:8px;}
+
+.wc tbody tr.gamerow td{background:var(--surface2);}
+.wc tbody tr.gamerow td:first-child{background:var(--surface2);box-shadow:inset 3px 0 0 var(--line2);}
+.wc tbody tr.gamerow:hover td{background:var(--surface2);}
+.wc .gcell-lbl{padding-left:12px;font-weight:500;}
+.wc .gcell-lbl .badge{background:var(--line2);color:var(--text);}
+.wc .gsub{color:var(--muted2);font-size:12px;}
+.wc .gdnp{font-size:10px;color:var(--muted2);border:1px solid var(--line2);border-radius:20px;padding:0 6px;text-transform:uppercase;letter-spacing:.04em;}
+.wc .gdash{color:var(--muted2);}
+
+@media (max-width:720px){
+  .wc tbody tr.open{margin-bottom:0;}
+  .wc td.gempty{display:none;}                 /* hide value-less cells in card mode */
+  .wc tbody tr.gamerow{background:var(--surface2);margin-top:-8px;}
+  .wc .gcell-lbl{padding-left:0;}
+}
 `;
 
 /* ------------------------------------------------------------------ *
@@ -284,8 +312,12 @@ function Leaderboard({ title, unit, items, fmt, lowerIsBetter }) {
 /* ------------------------------------------------------------------ *
  *  SORTABLE TABLE
  * ------------------------------------------------------------------ */
-function SortTable({ columns, rows, initialSort }) {
+function SortTable({ columns, rows, initialSort, rowKey, gamesFor }) {
   const [sort, setSort] = useState(initialSort);
+  const [open, setOpen] = useState(null);   // accordion: at most one expanded
+  const keyOf = rowKey || ((r) => r.code || (r.name + (r.team || "")));
+  const expandable = typeof gamesFor === "function";
+  const toggle = (k) => setOpen((cur) => (cur === k ? null : k));
   const sorted = useMemo(() => {
     const col = columns.find((c) => c.key === sort.key);
     const dir = sort.dir === "asc" ? 1 : -1;
@@ -340,13 +372,37 @@ function SortTable({ columns, rows, initialSort }) {
               </tr>
             </thead>
             <tbody>
-              {sorted.map((r, i) => (
-                <tr key={r.code || (r.name + (r.team || "")) || i}>
-                  {columns.map((c) => (
-                    <td key={c.key} data-label={c.label}>{c.render ? c.render(r) : r[c.key]}</td>
-                  ))}
-                </tr>
-              ))}
+              {sorted.map((r, i) => {
+                const k = keyOf(r);
+                const isOpen = expandable && open === k;
+                return (
+                  <Fragment key={k || i}>
+                    <tr
+                      className={(expandable ? "clickable" : "") + (isOpen ? " open" : "")}
+                      onClick={expandable ? () => toggle(k) : undefined}
+                      onKeyDown={expandable ? (e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), toggle(k)) : undefined}
+                      tabIndex={expandable ? 0 : undefined}
+                      aria-expanded={expandable ? isOpen : undefined}
+                    >
+                      {columns.map((c) => (
+                        <td key={c.key} data-label={c.label}>
+                          {c.render ? c.render(r) : r[c.key]}
+                        </td>
+                      ))}
+                    </tr>
+                    {isOpen && gamesFor(r).map((ctx, gi) => (
+                      <tr className="gamerow" key={k + ":" + (ctx.date || gi)}>
+                        {columns.map((c) => (
+                          <td key={c.key} data-label={c.label}
+                            className={c.gameCell ? undefined : "gempty"}>
+                            {c.gameCell ? c.gameCell(ctx) : null}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </Fragment>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -357,6 +413,34 @@ function SortTable({ columns, rows, initialSort }) {
 
 const f2 = (n) => n.toFixed(2);
 const fSigned = (n) => (n > 0 ? "+" : "") + n.toFixed(2);
+const fmtDate = (iso) =>
+  new Date(iso + "T00:00:00Z").toLocaleDateString("en-US",
+    { month: "short", day: "numeric", timeZone: "UTC" });
+
+// Per-match game contexts for a team / player row, fed to each column's gameCell.
+const teamGamesFor = (t, games) =>
+  (games.teams?.[t.code] || []).map(([date, opp, res, gf, ga, sh, sot, cor]) =>
+    ({ date, opp, res, gf, ga, sh, sot, cor }));
+
+const playerGamesFor = (p, games) => {
+  const mine = games.players?.[p.team]?.[p.name] || {};
+  return (games.teams?.[p.team] || []).map(([date, opp, res, gf, ga]) => {
+    const s = mine[date];   // [goals, assists, shots, sog] or undefined => DNP
+    return { date, opp, res, gf, ga, played: !!s,
+      g: s?.[0], a: s?.[1], sh: s?.[2], sog: s?.[3] };
+  });
+};
+
+// First-column label for a game row: opponent badge + date (+ DNP tag).
+const gameLabel = (ctx, nameByCode, dnp) => (
+  <span className="team-cell gcell-lbl">
+    <span className="badge" title={nameByCode[ctx.opp] || ctx.opp}>{ctx.opp}</span>
+    <span className="gsub">{fmtDate(ctx.date)}</span>
+    {dnp && <span className="gdnp">DNP</span>}
+  </span>
+);
+const gNum = (v) => (v == null ? <span className="gdash">—</span> : v);
+const resChip = (res) => <span className={"reschip r-" + res}>{res}</span>;
 
 /* ------------------------------------------------------------------ *
  *  PAGES
@@ -405,18 +489,30 @@ function Home({ data, go }) {
 }
 
 function Teams({ data }) {
+  const nameByCode = useMemo(
+    () => Object.fromEntries(data.teams.map((t) => [t.code, t.name])), [data.teams]);
+  // Each column also knows how to render one game's value, so the per-match rows
+  // line up under the same columns as the season per-game averages.
   const cols = [
     { key: "name", label: "Team", defDir: "asc",
-      render: (t) => <span className="team-cell"><span className="badge">{t.code}</span>{t.name}</span> },
+      render: (t) => <span className="team-cell"><span className="badge">{t.code}</span>{t.name}</span>,
+      gameCell: (g) => gameLabel(g, nameByCode) },
     { key: "rec", label: "Record", title: "Win–Draw–Loss", sortVal: (t) => t.pts,
-      render: (t) => <span className="rec">{t.W}–{t.D}–{t.L}</span> },
-    { key: "gpg", label: "GF/g", title: "Goals per game", render: (t) => <b className="tnum">{f2(t.gpg)}</b> },
-    { key: "apg", label: "GA/g", title: "Allowed goals per game", render: (t) => <span className="tnum">{f2(t.apg)}</span> },
+      render: (t) => <span className="rec">{t.W}–{t.D}–{t.L}</span>,
+      gameCell: (g) => resChip(g.res) },
+    { key: "gpg", label: "GF/g", title: "Goals per game", render: (t) => <b className="tnum">{f2(t.gpg)}</b>,
+      gameCell: (g) => <b className="tnum">{g.gf}</b> },
+    { key: "apg", label: "GA/g", title: "Allowed goals per game", render: (t) => <span className="tnum">{f2(t.apg)}</span>,
+      gameCell: (g) => <span className="tnum">{g.ga}</span> },
     { key: "gdpg", label: "GD/g", title: "Goal difference per game",
-      render: (t) => <span className={"tnum " + (t.gdpg >= 0 ? "pos" : "neg")}>{fSigned(t.gdpg)}</span> },
-    { key: "spg", label: "Shots/g", title: "Total shots per game", render: (t) => <span className="tnum">{f2(t.spg)}</span> },
-    { key: "sotpg", label: "SoT/g", title: "Shots on target per game", render: (t) => <span className="tnum">{f2(t.sotpg)}</span> },
-    { key: "cpg", label: "Corners/g", title: "Corners per game", render: (t) => <span className="tnum">{f2(t.cpg)}</span> },
+      render: (t) => <span className={"tnum " + (t.gdpg >= 0 ? "pos" : "neg")}>{fSigned(t.gdpg)}</span>,
+      gameCell: (g) => <span className={"tnum " + (g.gf - g.ga >= 0 ? "pos" : "neg")}>{(g.gf - g.ga > 0 ? "+" : "") + (g.gf - g.ga)}</span> },
+    { key: "spg", label: "Shots/g", title: "Total shots per game", render: (t) => <span className="tnum">{f2(t.spg)}</span>,
+      gameCell: (g) => <span className="tnum">{g.sh}</span> },
+    { key: "sotpg", label: "SoT/g", title: "Shots on target per game", render: (t) => <span className="tnum">{f2(t.sotpg)}</span>,
+      gameCell: (g) => <span className="tnum">{g.sot}</span> },
+    { key: "cpg", label: "Corners/g", title: "Corners per game", render: (t) => <span className="tnum">{f2(t.cpg)}</span>,
+      gameCell: (g) => <span className="tnum">{g.cor}</span> },
     { key: "P", label: "P", title: "Matches played", render: (t) => <span className="pill tnum">{t.P}</span> },
   ];
   return (
@@ -425,28 +521,40 @@ function Teams({ data }) {
         <div className="eyebrow">All 48 nations</div>
         <h1>Team Statistics</h1>
         <p>Every metric is normalized per game so teams at different points in the schedule stay
-          comparable. Tap any column to sort.</p>
+          comparable. Tap any column to sort, or a team to see its game-by-game log.</p>
       </div>
       <div style={{ marginTop: 28 }}>
-        <SortTable columns={cols} rows={data.teams} initialSort={{ key: "gpg", dir: "desc" }} />
+        <SortTable columns={cols} rows={data.teams} initialSort={{ key: "gpg", dir: "desc" }}
+          rowKey={(t) => t.code}
+          gamesFor={(t) => teamGamesFor(t, data.games)} />
       </div>
     </div>
   );
 }
 
 function Players({ data }) {
-  const cols = [
-    { key: "name", label: "Player", defDir: "asc", render: (p) => <span style={{ fontWeight: 600 }}>{p.name}</span> },
-    { key: "team", label: "Team", defDir: "asc", render: (p) => <span className="badge">{p.team}</span> },
-    { key: "pos", label: "Pos", defDir: "asc", render: (p) => <span className="pill">{p.pos}</span> },
-    { key: "gpg", label: "Goals/g", title: "Goals per game", render: (p) => <b className="tnum">{f2(p.gpg)}</b> },
-    { key: "apg", label: "Assists/g", title: "Assists per game", render: (p) => <span className="tnum">{f2(p.apg)}</span> },
-    { key: "shpg", label: "Shots/g", title: "Shots per game", render: (p) => <span className="tnum">{f2(p.shpg)}</span> },
-    { key: "sogpg", label: "SoG/g", title: "Shots on goal per game", render: (p) => <span className="tnum">{f2(p.sogpg)}</span> },
-    { key: "P", label: "P", title: "Matches played", render: (p) => <span className="pill tnum">{p.P}</span> },
-  ];
   const [team, setTeam] = useState("ALL");
   const [query, setQuery] = useState("");
+  const nameByCode = useMemo(
+    () => Object.fromEntries(data.teams.map((t) => [t.code, t.name])), [data.teams]);
+  // gameCell renders one match's value under the same column as the season rate;
+  // for a match the player didn't play, stats show "—" and the label is tagged DNP.
+  const cols = [
+    { key: "name", label: "Player", defDir: "asc", render: (p) => <span style={{ fontWeight: 600 }}>{p.name}</span>,
+      gameCell: (g) => gameLabel(g, nameByCode, !g.played) },
+    { key: "team", label: "Team", defDir: "asc", render: (p) => <span className="badge">{p.team}</span>,
+      gameCell: (g) => <span className="gres">{resChip(g.res)}<span className="tnum">{g.gf}–{g.ga}</span></span> },
+    { key: "pos", label: "Pos", defDir: "asc", render: (p) => <span className="pill">{p.pos}</span> },
+    { key: "gpg", label: "Goals/g", title: "Goals per game", render: (p) => <b className="tnum">{f2(p.gpg)}</b>,
+      gameCell: (g) => <b className="tnum">{gNum(g.g)}</b> },
+    { key: "apg", label: "Assists/g", title: "Assists per game", render: (p) => <span className="tnum">{f2(p.apg)}</span>,
+      gameCell: (g) => <span className="tnum">{gNum(g.a)}</span> },
+    { key: "shpg", label: "Shots/g", title: "Shots per game", render: (p) => <span className="tnum">{f2(p.shpg)}</span>,
+      gameCell: (g) => <span className="tnum">{gNum(g.sh)}</span> },
+    { key: "sogpg", label: "SoG/g", title: "Shots on goal per game", render: (p) => <span className="tnum">{f2(p.sogpg)}</span>,
+      gameCell: (g) => <span className="tnum">{gNum(g.sog)}</span> },
+    { key: "P", label: "P", title: "Matches played", render: (p) => <span className="pill tnum">{p.P}</span> },
+  ];
 
   // Teams that actually have players, as [code, fullName], sorted by name.
   const teamOptions = useMemo(() => {
@@ -472,7 +580,7 @@ function Players({ data }) {
         <div className="eyebrow">Individual leaders</div>
         <h1>Player Statistics</h1>
         <p>Per-game scoring and shooting output for every player on the pitch. Filter by team or
-          search by name, then tap any column to sort.</p>
+          search by name, then tap any column to sort — or a player to see their game-by-game log.</p>
       </div>
       <div style={{ marginTop: 28 }}>
         <div className="filters">
@@ -505,7 +613,9 @@ function Players({ data }) {
           </span>
         </div>
         {rows.length ? (
-          <SortTable columns={cols} rows={rows} initialSort={{ key: "gpg", dir: "desc" }} />
+          <SortTable columns={cols} rows={rows} initialSort={{ key: "gpg", dir: "desc" }}
+            rowKey={(p) => p.name + "|" + p.team}
+            gamesFor={(p) => playerGamesFor(p, data.games)} />
         ) : (
           <div className="empty">No players match this filter.</div>
         )}

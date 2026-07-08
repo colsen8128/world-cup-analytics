@@ -38,5 +38,8 @@ export function deriveData(RAW) {
       teamName: teamByCode[team]?.name ?? team,
     };
   });
-  return { updated: RAW.updated, matchday: RAW.matchday, teams, players };
+  // Per-match splits for the game-by-game dropdowns (optional; older data.json
+  // predates it). Passed through untouched.
+  const games = RAW.games ?? { teams: {}, players: {} };
+  return { updated: RAW.updated, matchday: RAW.matchday, teams, players, games };
 }

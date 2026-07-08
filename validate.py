@@ -342,6 +342,39 @@ def load_previous(path):
 
 
 # ----------------------------------------------------------------------------
+# Layer 3b — per-match splits must sum to the season totals (guards the games
+# block that powers the game-by-game dropdowns). Season totals ARE the sum of
+# these rows, so any mismatch is a pipeline bug, not a rounding difference.
+# ----------------------------------------------------------------------------
+def check_games(data, teams, players, rep):
+    games = data.get("games")
+    if not games:
+        return
+    gt = games.get("teams", {})
+    for t in teams:
+        rows = gt.get(t["code"])
+        if rows is None:
+            rep.error("games", f"{t['code']}: no per-match rows but P={t['P']}")
+            continue
+        if len(rows) != t["P"]:
+            rep.error("games", f"{t['code']}: {len(rows)} game rows != P {t['P']}")
+        for i, col in ((3, "GF"), (4, "GA"), (5, "shots"), (6, "sot"), (7, "cor")):
+            s = sum(g[i] for g in rows)
+            if s != t[col]:
+                rep.error("games", f"{t['code']}: per-match {col} sum {s} != season {t[col]}")
+
+    gp = games.get("players", {})
+    for p in players:
+        splits = gp.get(p["team"], {}).get(p["name"])
+        if not splits:
+            continue  # missing splits are advisory; a name-join gap, not a total error
+        for i, col in ((0, "goals"), (1, "assists"), (2, "shots"), (3, "sog")):
+            s = sum(v[i] for v in splits.values())
+            if s != p[col]:
+                rep.error("games",
+                          f"{p['name']} ({p['team']}): per-match {col} sum {s} != season {p[col]}")
+
+
 def validate(data, prev=None):
     rep = Report()
     check_schema(data, rep)
@@ -351,6 +384,7 @@ def validate(data, prev=None):
         players = [dict(zip(PLAYER_COLS, p)) for p in data["players"]]
         check_invariants(teams, players, rep)
         check_reconciliation(teams, players, data["matchday"], rep)
+        check_games(data, teams, players, rep)
         if prev is not None:
             check_temporal(prev, teams, players, rep)
     return rep
