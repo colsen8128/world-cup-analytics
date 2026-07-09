@@ -260,6 +260,11 @@ const CSS = `
 .wc .gdnp{font-size:10px;color:var(--muted2);border:1px solid var(--line2);border-radius:20px;padding:0 6px;text-transform:uppercase;letter-spacing:.04em;}
 .wc .gdash{color:var(--muted2);}
 
+/* ---- Country flag beside the code badge ---- */
+.wc .ntag{display:inline-flex;align-items:center;gap:6px;}
+.wc .flag{width:20px;height:14px;object-fit:cover;border-radius:2px;display:block;
+  box-shadow:0 0 0 1px rgba(255,255,255,.14);flex:0 0 auto;}
+
 /* ---- Rank number in the first column ---- */
 .wc .rankwrap{display:flex;align-items:center;}
 .wc .ranknum{flex:0 0 auto;min-width:24px;margin-right:12px;text-align:right;color:var(--muted2);
@@ -506,13 +511,40 @@ const playerGamesFor = (p, games) => {
 // First-column label for a game row: opponent badge + date (+ DNP tag).
 const gameLabel = (ctx, nameByCode, dnp) => (
   <span className="team-cell gcell-lbl">
-    <span className="badge" title={nameByCode[ctx.opp] || ctx.opp}>{ctx.opp}</span>
+    <TeamTag code={ctx.opp} title={nameByCode[ctx.opp] || ctx.opp} />
     <span className="gsub">{fmtDate(ctx.date)}</span>
     {dnp && <span className="gdnp">DNP</span>}
   </span>
 );
 const gNum = (v) => (v == null ? <span className="gdash">—</span> : v);
 const resChip = (res) => <span className={"reschip r-" + res}>{res}</span>;
+
+// FIFA 3-letter code -> flagcdn slug (ISO 3166-1 alpha-2, or a UK subdivision).
+const FLAG = {
+  ALG: "dz", ARG: "ar", AUS: "au", AUT: "at", BEL: "be", BIH: "ba", BRA: "br", CAN: "ca",
+  CIV: "ci", COD: "cd", COL: "co", CPV: "cv", CRO: "hr", CUW: "cw", CZE: "cz", ECU: "ec",
+  EGY: "eg", ENG: "gb-eng", ESP: "es", FRA: "fr", GER: "de", GHA: "gh", HAI: "ht", IRN: "ir",
+  IRQ: "iq", JOR: "jo", JPN: "jp", KOR: "kr", KSA: "sa", MAR: "ma", MEX: "mx", NED: "nl",
+  NOR: "no", NZL: "nz", PAN: "pa", PAR: "py", POR: "pt", QAT: "qa", RSA: "za", SCO: "gb-sct",
+  SEN: "sn", SUI: "ch", SWE: "se", TUN: "tn", TUR: "tr", URU: "uy", USA: "us", UZB: "uz",
+};
+
+function Flag({ code }) {
+  const iso = FLAG[code];
+  if (!iso) return null;   // unmapped code: just show the badge, no broken image
+  return <img className="flag" src={`https://flagcdn.com/${iso}.svg`} alt="" loading="lazy"
+    onError={(e) => { e.currentTarget.style.display = "none"; }} />;
+}
+
+// Flag + code badge, used wherever a country appears in the tables.
+function TeamTag({ code, title }) {
+  return (
+    <span className="ntag">
+      <Flag code={code} />
+      <span className="badge" title={title}>{code}</span>
+    </span>
+  );
+}
 
 /* ------------------------------------------------------------------ *
  *  PAGES
@@ -567,7 +599,7 @@ function Teams({ data }) {
   // line up under the same columns as the season per-game averages.
   const cols = [
     { key: "name", label: "Team", defDir: "asc",
-      render: (t) => <span className="team-cell"><span className="badge">{t.code}</span>{t.name}</span>,
+      render: (t) => <span className="team-cell"><TeamTag code={t.code} />{t.name}</span>,
       gameCell: (g) => gameLabel(g, nameByCode) },
     { key: "rec", label: "Record", title: "Win–Draw–Loss", sortVal: (t) => t.pts,
       render: (t) => <span className="rec">{t.W}–{t.D}–{t.L}</span>,
@@ -614,7 +646,7 @@ function Players({ data }) {
   const cols = [
     { key: "name", label: "Player", defDir: "asc", render: (p) => <span style={{ fontWeight: 600 }}>{p.name}</span>,
       gameCell: (g) => gameLabel(g, nameByCode, !g.played) },
-    { key: "team", label: "Team", defDir: "asc", render: (p) => <span className="badge">{p.team}</span>,
+    { key: "team", label: "Team", defDir: "asc", render: (p) => <TeamTag code={p.team} />,
       gameCell: (g) => <span className="gres">{resChip(g.res)}<span className="tnum">{g.gf}–{g.ga}</span></span> },
     { key: "pos", label: "Pos", defDir: "asc", render: (p) => <span className="pill">{p.pos}</span> },
     { key: "gpg", label: "Goals/g", title: "Goals per game", render: (p) => <b className="tnum">{f2(p.gpg)}</b>,
