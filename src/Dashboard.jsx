@@ -260,6 +260,24 @@ const CSS = `
 .wc .gdnp{font-size:10px;color:var(--muted2);border:1px solid var(--line2);border-radius:20px;padding:0 6px;text-transform:uppercase;letter-spacing:.04em;}
 .wc .gdash{color:var(--muted2);}
 
+/* ---- Rank number in the first column ---- */
+.wc .rankwrap{display:flex;align-items:center;}
+.wc .ranknum{flex:0 0 auto;min-width:24px;margin-right:12px;text-align:right;color:var(--muted2);
+  font-family:'Barlow Condensed','Inter',sans-serif;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;}
+
+/* ---- Pagination ---- */
+.wc .pager{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:16px 2px 0;}
+.wc .pg-count{color:var(--muted2);font-size:12px;font-variant-numeric:tabular-nums;}
+.wc .pg-controls{display:flex;align-items:center;gap:6px;margin-left:auto;}
+.wc .pg-btn{appearance:none;min-width:32px;height:32px;padding:0 8px;background:var(--surface2);
+  color:var(--muted);border:1px solid var(--line2);border-radius:8px;cursor:pointer;
+  font-family:'Barlow Condensed','Inter',sans-serif;font-weight:600;font-size:14px;font-variant-numeric:tabular-nums;}
+.wc .pg-btn:hover:not(:disabled){color:var(--text);border-color:var(--blue);}
+.wc .pg-btn.on{background:var(--blue);color:var(--base);border-color:var(--blue);}
+.wc .pg-btn:disabled{opacity:.4;cursor:default;}
+.wc .pg-gap{color:var(--muted2);padding:0 2px;}
+@media (max-width:640px){.wc .pg-controls{margin-left:0;}}
+
 @media (max-width:720px){
   .wc tbody tr.open{margin-bottom:0;}
   .wc td.gempty{display:none;}                 /* hide value-less cells in card mode */
@@ -310,11 +328,44 @@ function Leaderboard({ title, unit, items, fmt, lowerIsBetter }) {
 }
 
 /* ------------------------------------------------------------------ *
+ *  PAGER — numbered pages with ellipses, prev/next, and an X–Y of Z count
+ * ------------------------------------------------------------------ */
+function pageItems(cur, count) {
+  const out = [];
+  for (let p = 1; p <= count; p++) {
+    if (p === 1 || p === count || (p >= cur - 1 && p <= cur + 1)) out.push(p);
+    else if (out[out.length - 1] !== "…") out.push("…");
+  }
+  return out;
+}
+
+function Pager({ page, pageCount, total, from, to, onGo }) {
+  return (
+    <div className="pager">
+      <span className="pg-count">Showing {from}–{to} of {total}</span>
+      <div className="pg-controls">
+        <button className="pg-btn" onClick={() => onGo(page - 1)} disabled={page <= 1}
+          aria-label="Previous page">‹</button>
+        {pageItems(page, pageCount).map((p, i) =>
+          p === "…"
+            ? <span key={"e" + i} className="pg-gap">…</span>
+            : <button key={p} className={"pg-btn" + (p === page ? " on" : "")}
+                onClick={() => onGo(p)} aria-current={p === page ? "page" : undefined}>{p}</button>
+        )}
+        <button className="pg-btn" onClick={() => onGo(page + 1)} disabled={page >= pageCount}
+          aria-label="Next page">›</button>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ *
  *  SORTABLE TABLE
  * ------------------------------------------------------------------ */
-function SortTable({ columns, rows, initialSort, rowKey, gamesFor }) {
+function SortTable({ columns, rows, initialSort, rowKey, gamesFor, rank, pageSize }) {
   const [sort, setSort] = useState(initialSort);
   const [open, setOpen] = useState(null);   // accordion: at most one expanded
+  const [page, setPage] = useState(1);
   const keyOf = rowKey || ((r) => r.code || (r.name + (r.team || "")));
   const expandable = typeof gamesFor === "function";
   const toggle = (k) => setOpen((cur) => (cur === k ? null : k));
@@ -334,6 +385,16 @@ function SortTable({ columns, rows, initialSort, rowKey, gamesFor }) {
   const pickSort = (key) =>
     setSort({ key, dir: columns.find((c) => c.key === key)?.defDir || "desc" });
   const flipDir = () => setSort((s) => ({ key: s.key, dir: s.dir === "asc" ? "desc" : "asc" }));
+
+  // Pagination: back to page 1 whenever the sort or the underlying rows (filter/
+  // search) change, so you never land on a now-empty page.
+  const size = pageSize || 20;
+  useEffect(() => { setPage(1); setOpen(null); }, [sort, rows]);
+  const total = sorted.length;
+  const pageCount = Math.max(1, Math.ceil(total / size));
+  const cur = Math.min(page, pageCount);
+  const start = (cur - 1) * size;
+  const pageRows = sorted.slice(start, start + size);
 
   return (
     <>
@@ -372,11 +433,12 @@ function SortTable({ columns, rows, initialSort, rowKey, gamesFor }) {
               </tr>
             </thead>
             <tbody>
-              {sorted.map((r, i) => {
+              {pageRows.map((r, i) => {
                 const k = keyOf(r);
                 const isOpen = expandable && open === k;
+                const rnk = start + i + 1;   // continuous rank across pages
                 return (
-                  <Fragment key={k || i}>
+                  <Fragment key={k || rnk}>
                     <tr
                       className={(expandable ? "clickable" : "") + (isOpen ? " open" : "")}
                       onClick={expandable ? () => toggle(k) : undefined}
@@ -384,9 +446,14 @@ function SortTable({ columns, rows, initialSort, rowKey, gamesFor }) {
                       tabIndex={expandable ? 0 : undefined}
                       aria-expanded={expandable ? isOpen : undefined}
                     >
-                      {columns.map((c) => (
+                      {columns.map((c, ci) => (
                         <td key={c.key} data-label={c.label}>
-                          {c.render ? c.render(r) : r[c.key]}
+                          {rank && ci === 0 ? (
+                            <span className="rankwrap">
+                              <span className="ranknum">{rnk}</span>
+                              {c.render ? c.render(r) : r[c.key]}
+                            </span>
+                          ) : (c.render ? c.render(r) : r[c.key])}
                         </td>
                       ))}
                     </tr>
@@ -407,6 +474,11 @@ function SortTable({ columns, rows, initialSort, rowKey, gamesFor }) {
           </table>
         </div>
       </div>
+
+      {pageCount > 1 && (
+        <Pager page={cur} pageCount={pageCount} total={total}
+          from={start + 1} to={Math.min(start + size, total)} onGo={setPage} />
+      )}
     </>
   );
 }
@@ -525,7 +597,7 @@ function Teams({ data }) {
       </div>
       <div style={{ marginTop: 28 }}>
         <SortTable columns={cols} rows={data.teams} initialSort={{ key: "gpg", dir: "desc" }}
-          rowKey={(t) => t.code}
+          rowKey={(t) => t.code} rank pageSize={15}
           gamesFor={(t) => teamGamesFor(t, data.games)} />
       </div>
     </div>
@@ -614,7 +686,7 @@ function Players({ data }) {
         </div>
         {rows.length ? (
           <SortTable columns={cols} rows={rows} initialSort={{ key: "gpg", dir: "desc" }}
-            rowKey={(p) => p.name + "|" + p.team}
+            rowKey={(p) => p.name + "|" + p.team} rank pageSize={15}
             gamesFor={(p) => playerGamesFor(p, data.games)} />
         ) : (
           <div className="empty">No players match this filter.</div>
