@@ -496,8 +496,8 @@ const fmtDate = (iso) =>
 
 // Per-match game contexts for a team / player row, fed to each column's gameCell.
 const teamGamesFor = (t, games) =>
-  (games.teams?.[t.code] || []).map(([date, opp, res, gf, ga, sh, sot, cor]) =>
-    ({ date, opp, res, gf, ga, sh, sot, cor }));
+  (games.teams?.[t.code] || []).map(([date, opp, res, gf, ga, sh, sot, cor, sa = 0, sota = 0]) =>
+    ({ date, opp, res, gf, ga, sh, sot, cor, sa, sota }));
 
 const playerGamesFor = (p, games) => {
   const mine = games.players?.[p.team]?.[p.name] || {};
@@ -615,6 +615,10 @@ function Teams({ data }) {
       gameCell: (g) => <span className="tnum">{g.sh}</span> },
     { key: "sotpg", label: "SoT/g", title: "Shots on target per game", render: (t) => <span className="tnum">{f2(t.sotpg)}</span>,
       gameCell: (g) => <span className="tnum">{g.sot}</span> },
+    { key: "sapg", label: "SA/g", title: "Shots against per game", render: (t) => <span className="tnum">{f2(t.sapg)}</span>,
+      gameCell: (g) => <span className="tnum">{g.sa}</span> },
+    { key: "sotapg", label: "SoTA/g", title: "Shots on target against per game", render: (t) => <span className="tnum">{f2(t.sotapg)}</span>,
+      gameCell: (g) => <span className="tnum">{g.sota}</span> },
     { key: "cpg", label: "Corners/g", title: "Corners per game", render: (t) => <span className="tnum">{f2(t.cpg)}</span>,
       gameCell: (g) => <span className="tnum">{g.cor}</span> },
     { key: "P", label: "P", title: "Matches played", render: (t) => <span className="pill tnum">{t.P}</span> },

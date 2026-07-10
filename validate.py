@@ -35,22 +35,23 @@ from pathlib import Path
 
 DEFAULT_PATH = Path("public/data.json")
 
-# Column layout of each row in data.json (keep in sync with fetch_fbref.py).
-TEAM_COLS = ["code", "name", "P", "W", "D", "L", "GF", "GA", "shots", "sot", "cor"]
+# Column layout of each row in data.json. sa/sota = shots / shots-on-target faced.
+TEAM_COLS = ["code", "name", "P", "W", "D", "L", "GF", "GA", "shots", "sot", "cor",
+             "sa", "sota"]
 PLAYER_COLS = ["name", "team", "pos", "P", "goals", "assists", "shots", "sog"]
-TEAM_INTS = ["P", "W", "D", "L", "GF", "GA", "shots", "sot", "cor"]
+TEAM_INTS = ["P", "W", "D", "L", "GF", "GA", "shots", "sot", "cor", "sa", "sota"]
 PLAYER_INTS = ["P", "goals", "assists", "shots", "sog"]
 
 MAX_TEAMS = 48          # 2026 World Cup field
 MAX_TEAM_GAMES = 7      # group (3) + R32/R16/QF/SF/final = at most 7
 
 # Layer 4 — cumulative season totals that must never decrease commit-to-commit.
-TEAM_CUMULATIVE = ["P", "W", "D", "L", "GF", "GA", "shots", "sot", "cor"]
+TEAM_CUMULATIVE = ["P", "W", "D", "L", "GF", "GA", "shots", "sot", "cor", "sa", "sota"]
 PLAYER_CUMULATIVE = ["P", "goals", "assists", "shots", "sog"]
 # Generous per-added-game caps; a jump above this since the last commit is a
 # spike worth a human look (WARN), not a hard block. dP==0 still allows one
 # game's worth so a legitimate FBref correction doesn't trip the alarm.
-TEAM_GROWTH_CAP = {"shots": 45, "sot": 25, "GF": 12, "GA": 12, "cor": 20}
+TEAM_GROWTH_CAP = {"shots": 45, "sot": 25, "GF": 12, "GA": 12, "cor": 20, "sa": 45, "sota": 25}
 PLAYER_GROWTH_CAP = {"shots": 15, "sog": 12, "goals": 7, "assists": 7}
 
 
@@ -163,6 +164,8 @@ def check_invariants(teams, players, rep):
             rep.error("invariant", f"{code}: P={t['P']} exceeds max {MAX_TEAM_GAMES} games")
         if t["sot"] > t["shots"]:
             rep.error("invariant", f"{code}: shots on target {t['sot']} > total shots {t['shots']}")
+        if t["sota"] > t["sa"]:
+            rep.error("invariant", f"{code}: SoT against {t['sota']} > shots against {t['sa']}")
 
     team_P = {t["code"]: t["P"] for t in teams}
     for p in players:
@@ -358,8 +361,9 @@ def check_games(data, teams, players, rep):
             continue
         if len(rows) != t["P"]:
             rep.error("games", f"{t['code']}: {len(rows)} game rows != P {t['P']}")
-        for i, col in ((3, "GF"), (4, "GA"), (5, "shots"), (6, "sot"), (7, "cor")):
-            s = sum(g[i] for g in rows)
+        for i, col in ((3, "GF"), (4, "GA"), (5, "shots"), (6, "sot"), (7, "cor"),
+                       (8, "sa"), (9, "sota")):
+            s = sum(g[i] for g in rows if len(g) > i)
             if s != t[col]:
                 rep.error("games", f"{t['code']}: per-match {col} sum {s} != season {t[col]}")
 
