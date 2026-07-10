@@ -116,7 +116,8 @@ def finished_events():
 
 
 def _blank_team():
-    return dict(name="", P=0, W=0, D=0, L=0, GF=0, GA=0, shots=0, sot=0, cor=0)
+    return dict(name="", P=0, W=0, D=0, L=0, GF=0, GA=0, shots=0, sot=0, cor=0,
+                sa=0, sota=0)   # sa/sota = shots / shots-on-target faced (against)
 
 
 def accumulate():
@@ -176,8 +177,11 @@ def accumulate():
                 res = "W" if gf > ga_ else "L" if gf < ga_ else "D"
                 tt[res] += 1
                 sh, sot, cor = match_team.get(code, (0, 0, 0))
+                sa, sota, _ = match_team.get(opp, (0, 0, 0))   # opponent's shots = faced
+                tt["sa"] += sa
+                tt["sota"] += sota
                 team_games.setdefault(code, []).append(
-                    [day, opp, res, gf, ga_, sh, sot, cor])
+                    [day, opp, res, gf, ga_, sh, sot, cor, sa, sota])
 
         # Per-player shooting/scoring from the rosters — kept per match and summed.
         for r in summary.get("rosters", []):
@@ -221,7 +225,8 @@ def build_data(teams, players, team_games, player_games) -> dict:
         if not code:
             continue
         team_rows.append([code, t["name"], t["P"], t["W"], t["D"], t["L"],
-                          t["GF"], t["GA"], t["shots"], t["sot"], t["cor"]])
+                          t["GF"], t["GA"], t["shots"], t["sot"], t["cor"],
+                          t["sa"], t["sota"]])
     team_rows.sort(key=lambda x: -(x[6] / x[2]) if x[2] else 0)      # goals/game
 
     player_rows = []

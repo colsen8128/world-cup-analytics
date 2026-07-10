@@ -13,16 +13,18 @@
  *    players: [name, teamCode, pos, P, goals, assists, shots, sog]
  * ------------------------------------------------------------------ */
 export function deriveData(RAW) {
-  const teams = RAW.teams.map(([code, name, P, W, D, L, GF, GA, shots, sot, cor]) => {
+  const teams = RAW.teams.map(([code, name, P, W, D, L, GF, GA, shots, sot, cor, sa = 0, sota = 0]) => {
     const pts = W * 3 + D;
     const per = (n) => (P > 0 ? n / P : 0); // avoid NaN/Infinity for 0-game teams
     return {
-      code, name, P, W, D, L, GF, GA, shots, sot, cor, pts,
+      code, name, P, W, D, L, GF, GA, shots, sot, cor, sa, sota, pts,
       gpg: per(GF),           // goals per game
       apg: per(GA),           // allowed goals per game
       gdpg: per(GF - GA),     // goal difference per game
       spg: per(shots),        // total shots per game
       sotpg: per(sot),        // shots on target per game
+      sapg: per(sa),          // shots against per game
+      sotapg: per(sota),      // shots on target against per game
       cpg: per(cor),          // corners per game
     };
   });
