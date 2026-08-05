@@ -43,7 +43,9 @@ TEAM_INTS = ["P", "W", "D", "L", "GF", "GA", "shots", "sot", "cor", "sa", "sota"
 PLAYER_INTS = ["P", "goals", "assists", "shots", "sog"]
 
 MAX_TEAMS = 48          # 2026 World Cup field
-MAX_TEAM_GAMES = 7      # group (3) + R32/R16/QF/SF/final = at most 7
+MAX_TEAM_GAMES = 8      # group (3) + R32/R16/QF/SF (4) = 7, then the final OR
+                        # the third-place playoff = 8. Both semi-final losers
+                        # play an 8th game, so all four semi-finalists reach 8.
 
 # Layer 4 — cumulative season totals that must never decrease commit-to-commit.
 TEAM_CUMULATIVE = ["P", "W", "D", "L", "GF", "GA", "shots", "sot", "cor", "sa", "sota"]
