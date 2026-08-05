@@ -9,9 +9,13 @@ name: Refresh data (ESPN)
 # nothing to install.
 
 on:
-  schedule:
-    - cron: "0 */2 * * *"   # every 2 hours (UTC; GitHub cron is best-effort)
-  workflow_dispatch: {}
+  # PAUSED 2026-08-05 — the 2026 World Cup finished on 2026-07-19 and the data
+  # is final, so there is nothing left to refresh. The job is kept rather than
+  # deleted: re-enable by uncommenting the two lines below.
+  #
+  # schedule:
+  #   - cron: "0 */2 * * *"   # every 2 hours (UTC; GitHub cron is best-effort)
+  workflow_dispatch: {}      # still runnable on demand from the Actions tab
 
 # Don't stack refreshes; let an in-progress one finish.
 concurrency:
